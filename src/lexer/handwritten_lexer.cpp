@@ -46,26 +46,7 @@ Token parse_identifier(const std::string &code, int &index) {
   }
   std::string id = code.substr(index, i - index);
   index = i - 1;
-  if (id == "return") {
-    return Token(TokenType::Keyword, KeywordType::Return);
-  } else if (id == "int") {
-    return Token(TokenType::Keyword, KeywordType::Int);
-  } else if (id == "if") {
-    return Token(TokenType::Keyword, KeywordType::If);
-  } else if (id == "else") {
-    return Token(TokenType::Keyword, KeywordType::Else);
-  } else if (id == "for") {
-    return Token(TokenType::Keyword, KeywordType::For);
-  } else if (id == "do") {
-    return Token(TokenType::Keyword, KeywordType::Do);
-  } else if (id == "while") {
-    return Token(TokenType::Keyword, KeywordType::While);
-  } else if (id == "break") {
-    return Token(TokenType::Keyword, KeywordType::Break);
-  } else if (id == "continue") {
-    return Token(TokenType::Keyword, KeywordType::Continue);
-  }
-  return Token(TokenType::Identifier, id);
+  return get_token_by_identifier(id);
 }
 
 Token parse_hex(const std::string &code, int &index) {

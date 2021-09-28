@@ -3,5 +3,8 @@ project(Scompiler)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Scompiler src/main.cpp
-        src/lexer/handwritten_lexer.cpp src/lexer/regex_lexer.cpp)
+add_executable(Scompiler
+        src/main.cpp
+        src/lexer/Token.cpp
+        src/lexer/handwritten_lexer.cpp
+        src/lexer/spirit_lexer.cpp)
