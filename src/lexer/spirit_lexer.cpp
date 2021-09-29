@@ -121,115 +121,115 @@ class Tokenizer {
         break;
       }
       case ID_LPAREN: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Lparen);
+        token_vec.emplace_back(TokenType::Lparen, "(");
         break;
       }
       case ID_RPAREN: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Rparen);
+        token_vec.emplace_back(TokenType::Rparen, ")");
         break;
       }
       case ID_LSBRACE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::LSbrace);
+        token_vec.emplace_back(TokenType::LSbrace, "[");
         break;
       }
       case ID_RSBRACE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::RSbrace);
+        token_vec.emplace_back(TokenType::RSbrace, "]");
         break;
       }
       case ID_LCBRACE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::LCbrace);
+        token_vec.emplace_back(TokenType::LCbrace, "{");
         break;
       }
       case ID_RCBRACE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::RCbrace);
+        token_vec.emplace_back(TokenType::RCbrace, "}");
         break;
       }
       case ID_SEMICOLON: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Semicolon);
+        token_vec.emplace_back(TokenType::Semicolon, ";");
         break;
       }
       case ID_COMMA: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Comma);
+        token_vec.emplace_back(TokenType::Comma, ",");
         break;
       }
       case ID_SUB: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Sub);
+        token_vec.emplace_back(TokenType::Sub, "-");
         break;
       }
       case ID_ADD: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::And);
+        token_vec.emplace_back(TokenType::Add, "+");
         break;
       }
       case ID_TIMES: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Times);
+        token_vec.emplace_back(TokenType::Times, "*");
         break;
       }
       case ID_DIVIDE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Divide);
+        token_vec.emplace_back(TokenType::Divide, "/");
         break;
       }
       case ID_MOD: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Mod);
+        token_vec.emplace_back(TokenType::Mod, "%");
         break;
       }
       case ID_NOT: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Not);
+        token_vec.emplace_back(TokenType::Not, "~");
         break;
       }
       case ID_LNOT: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Lnot);
+        token_vec.emplace_back(TokenType::Lnot, "!");
         break;
       }
       case ID_OR: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Or);
+        token_vec.emplace_back(TokenType::Or, "|");
         break;
       }
       case ID_LOR: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Lor);
+        token_vec.emplace_back(TokenType::Lor, "||");
         break;
       }
       case ID_AND: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::And);
+        token_vec.emplace_back(TokenType::And, "&");
         break;
       }
       case ID_LAND: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Land);
+        token_vec.emplace_back(TokenType::Land, "&&");
         break;
       }
       case ID_ASSIGN: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Assign);
+        token_vec.emplace_back(TokenType::Assign, "=");
         break;
       }
       case ID_GREATER: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Greater);
+        token_vec.emplace_back(TokenType::Greater, ">");
         break;
       }
       case ID_LESS: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Less);
+        token_vec.emplace_back(TokenType::Less, "<");
         break;
       }
       case ID_EQUAL: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Equal);
+        token_vec.emplace_back(TokenType::Equal, "==");
         break;
       }
       case ID_NEQUAL: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Nequal);
+        token_vec.emplace_back(TokenType::Nequal, "!=");
         break;
       }
       case ID_GE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Ge);
+        token_vec.emplace_back(TokenType::Ge, ">=");
         break;
       }
       case ID_LE: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Le);
+        token_vec.emplace_back(TokenType::Le, "<=");
         break;
       }
       case ID_QUESTION: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Question);
+        token_vec.emplace_back(TokenType::Question, "?");
         break;
       }
       case ID_COLON: {
-        token_vec.emplace_back(TokenType::Punctuation, PunctuactionType::Colon);
+        token_vec.emplace_back(TokenType::Colon, ":");
         break;
       }
       case ID_STRING: {

@@ -7,4 +7,5 @@ add_executable(Scompiler
         src/main.cpp
         src/lexer/Token.cpp
         src/lexer/handwritten_lexer.cpp
-        src/lexer/spirit_lexer.cpp)
+        src/lexer/spirit_lexer.cpp
+        src/parser/recursive_descent_parser.cpp)
