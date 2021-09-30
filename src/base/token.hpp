@@ -1,5 +1,5 @@
-#ifndef SCOMPILER_SRC_LEXER_TOKEN_HPP_
-#define SCOMPILER_SRC_LEXER_TOKEN_HPP_
+#ifndef SCOMPILER_SRC_BASE_TOKEN_HPP_
+#define SCOMPILER_SRC_BASE_TOKEN_HPP_
 
 #include <string>
 #include <utility>
@@ -90,4 +90,4 @@ std::ostream &operator<<(std::ostream &os, const Token &token);
 
 Token get_token_by_identifier(const std::string &id);
 
-#endif //SCOMPILER_SRC_LEXER_TOKEN_HPP_
+#endif //SCOMPILER_SRC_BASE_TOKEN_HPP_

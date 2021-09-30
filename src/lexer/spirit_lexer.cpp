@@ -1,6 +1,6 @@
 #include "spirit_lexer.hpp"
 
-#include "lex_error.hpp"
+#include "compile_error.hpp"
 
 #include <fstream>
 #include <boost/spirit/include/lex_lexertl.hpp>

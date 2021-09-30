@@ -4,9 +4,8 @@
 #include <algorithm>
 
 int main() {
-  Lexer lexer;
-  auto token_vec = lexer.lex_file("../test/lex.c");
-  std::for_each(token_vec.begin(), token_vec.end(), [](auto token) {
+  auto token_stream = lex_file("../test/lex.c");
+  std::for_each(token_stream.begin(), token_stream.end(), [](auto token) {
     std::cout << token << "\n";
   });
 }

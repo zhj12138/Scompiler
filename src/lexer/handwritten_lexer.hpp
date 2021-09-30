@@ -1,7 +1,7 @@
 #ifndef SCOMPILER_SRC_LEXER_HANDWRITTEN_LEXER_HPP_
 #define SCOMPILER_SRC_LEXER_HANDWRITTEN_LEXER_HPP_
 
-#include "Token.hpp"
+#include "token.hpp"
 
 #include <string>
 #include <vector>

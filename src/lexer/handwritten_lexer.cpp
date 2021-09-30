@@ -1,9 +1,8 @@
 #include "handwritten_lexer.hpp"
 
-#include "lex_error.hpp"
+#include "compile_error.hpp"
 #include <cassert>
 #include <fstream>
-#include <sstream>
 
 // only support '//'
 bool skip_comment(const std::string &code, int &index) {

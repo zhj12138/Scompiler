@@ -1,4 +1,4 @@
-#include "Token.hpp"
+#include "token.hpp"
 
 inline std::string to_string(const TokenType &pt) {
   switch (pt) {
