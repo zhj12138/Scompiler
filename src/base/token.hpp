@@ -9,8 +9,8 @@
 
 enum class TokenType {
   /* Keywords */
-  Return,
   Int,
+  Return,
   If,
   Else,
   For,
@@ -29,14 +29,15 @@ enum class TokenType {
   Semicolon,// ;
   Comma,    // ,
 
+  Not,      // ~
+  Lnot,     // !
+
   Sub,      // -
   Add,      // +
   Times,    // *
   Divide,   // /
   Mod,      // %
 
-  Not,      // ~
-  Lnot,     // !
   Or,       // |
   Lor,      // ||
   And,      // &
@@ -44,12 +45,13 @@ enum class TokenType {
 
   Assign,   // =
 
-  Greater,  // >
-  Less,     // <
   Equal,    // ==
   Nequal,   // !=
-  Ge,       // >=
+
+  Less,     // <
+  Greater,  // >
   Le,       // <=
+  Ge,       // >=
 
   Question, // ?
   Colon,    // :
@@ -68,23 +70,30 @@ class Token {
   ~Token() = default;
 
   [[nodiscard]] TokenType type() const { return type_; }
-  [[nodiscard]] bool is_keyword() const { return type_ >= TokenType::Return && type_ <= TokenType::Continue; }
+  [[nodiscard]] bool is_keyword() const { return type_ >= TokenType::Int && type_ <= TokenType::Continue; }
   [[nodiscard]] bool is_punctuation() const { return type_ >= TokenType::Lparen && type_ <= TokenType::Colon; }
   [[nodiscard]] bool is_identifier() const { return type_ == TokenType::Identifier; }
   [[nodiscard]] bool is_number() const { return type_ == TokenType::Number; }
   [[nodiscard]] bool is_string() const { return type_ == TokenType::String; }
 
+  [[nodiscard]] bool is_type() const { return type_ == TokenType::Int; }
+
+  [[nodiscard]] bool is_equality_op() const { return type_ >= TokenType::Equal && type_ <= TokenType::Nequal; }
+  [[nodiscard]] bool is_relational_op() const { return type_ >= TokenType::Less && type_ <= TokenType::Ge; }
+  [[nodiscard]] bool is_additive_op() const { return type_ >= TokenType::Sub && type_ <= TokenType::Add; }
+  [[nodiscard]] bool is_multiplicative_op() const { return type_ >= TokenType::Times && type_ <= TokenType::Mod; };
+  [[nodiscard]] bool is_unary_op() const { return type_ >= TokenType::Not && type_ <= TokenType::Sub; }
+
   [[nodiscard]] value_type value() { return value_; }
   [[nodiscard]] int get_number() const { return std::get<int>(value_); }
   [[nodiscard]] std::string get_string() const { return std::get<std::string>(value_); }
 
-  [[nodiscard]] bool is(TokenType t) { return t == type_; }
+  [[nodiscard]] bool is(TokenType t) const { return t == type_; }
 
  private:
   TokenType type_;
   value_type value_;
 };
-
 
 std::ostream &operator<<(std::ostream &os, const Token &token);
 

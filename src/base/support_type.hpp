@@ -1,0 +1,8 @@
+#ifndef SCOMPILER_SRC_BASE_SUPPORT_TYPE_HPP_
+#define SCOMPILER_SRC_BASE_SUPPORT_TYPE_HPP_
+
+enum class SupportType {
+  Int,
+};
+
+#endif //SCOMPILER_SRC_BASE_SUPPORT_TYPE_HPP_

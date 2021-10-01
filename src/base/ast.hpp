@@ -3,6 +3,7 @@
 
 #include "token.hpp"
 #include "variable.hpp"
+#include "support_type.hpp"
 
 #include <utility>
 #include <vector>
@@ -32,27 +33,41 @@ using PrimaryPtr = std::shared_ptr<Primary>;
 class ExpressionList;
 using ExpressionListPtr = std::shared_ptr<ExpressionList>;
 
+class FuncCall {
+ public:
+  FuncCall(std::string &func_name, ExpressionListPtr exp_list)
+      : func_name_(func_name), expression_list_(std::move(exp_list)) {}
+  ~FuncCall() = default;
+ private:
+  std::string func_name_;
+  ExpressionListPtr expression_list_;
+};
+using FuncCallPtr = std::shared_ptr<FuncCall>;
+// 因为当前不支持指针，所以其实Array解析的时候postfix只能递归到primary,而不能递归到func call，不过为了符合文法，还是支持该语法
+class Array {
+  using nameType = std::variant<FuncCallPtr, PrimaryPtr>;
+  enum class Type {
+    PrimaryName,
+    FuncCallName,
+  };
+ public:
+  Array(FuncCallPtr name, std::vector<ExpressionPtr> expressions)
+      : type_(Type::FuncCallName),
+        name_(name),
+        expressions_(std::move(expressions)) {}
+  Array(PrimaryPtr name, std::vector<ExpressionPtr> expressions)
+      : type_(Type::PrimaryName),
+        name_(name),
+        expressions_(std::move(expressions)) {}
+  ~Array() = default;
+ private:
+  Type type_;
+  nameType name_;
+  std::vector<ExpressionPtr> expressions_;
+};
+using ArrayPtr = std::shared_ptr<Array>;
+
 class Postfix {
-  class FuncCall {
-   public:
-    FuncCall(std::string &func_name, ExpressionListPtr exp_list)
-        : func_name_(func_name), expression_list_(std::move(exp_list)) {}
-    ~FuncCall() = default;
-   private:
-    std::string func_name_;
-    ExpressionListPtr expression_list_;
-  };
-  class Array {
-   public:
-    Array(int dimension, std::vector<ExpressionPtr> expressions)
-        : dimension_(dimension), expressions_(std::move(expressions)) {}
-    ~Array() = default;
-   private:
-    int dimension_;
-    std::vector<ExpressionPtr> expressions_;
-  };
-  using FuncCallPtr = std::shared_ptr<FuncCall>;
-  using ArrayPtr = std::shared_ptr<Array>;
  public:
   using value_type = std::variant<PrimaryPtr, FuncCallPtr, ArrayPtr>;
   enum class Type {
@@ -61,12 +76,14 @@ class Postfix {
     Array,
   };
   explicit Postfix(const PrimaryPtr &p) : type_(Type::Primary), value_(p) {}
-  Postfix(std::string &fname, const ExpressionListPtr &exp_list)
+  explicit Postfix(const FuncCallPtr &p)
+      : type_(Type::FuncCall), value_(p) {}
+  Postfix(const PrimaryPtr &name, const std::vector<ExpressionPtr> &exps)
       : type_(Type::FuncCall),
-        value_(std::make_shared<FuncCall>(FuncCall(fname, exp_list))) {}
-  Postfix(int d, const std::vector<ExpressionPtr> &exps)
+        value_(std::make_shared<Array>(name, exps)) {}
+  Postfix(const FuncCallPtr &name, const std::vector<ExpressionPtr> &exps)
       : type_(Type::FuncCall),
-        value_(std::make_shared<Array>(d, exps)) {}
+        value_(std::make_shared<Array>(name, exps)) {}
   ~Postfix() = default;
  private:
   Type type_;
@@ -83,125 +100,125 @@ class Unary {
     Not,
     Lnot,
   };
-  Unary(UnaryPtr left, Op op, value_type right)
-      : left_(std::move(left)), op_(op), right_(std::move(right)) {}
+  explicit Unary(PostfixPtr value) : op_(Op::Sub), value_(std::move(value)) {}
+  Unary(Op op, UnaryPtr value)
+      : op_(op), value_(std::move(value)) {}
   ~Unary() = default;
  private:
-  UnaryPtr left_;
   Op op_;
-  std::variant<PostfixPtr, UnaryPtr> right_;
+  value_type value_;
 };
 using UnaryPtr = std::shared_ptr<Unary>;
 
 class Multiplicative {
   using MultiplicativePtr = std::shared_ptr<Multiplicative>;
  public:
-  using value_type = std::variant<MultiplicativePtr, UnaryPtr>;
   enum class Op {
     Times,
     Divide,
     Mod,
   };
-  Multiplicative(MultiplicativePtr left, Op op, value_type right)
+  explicit Multiplicative(UnaryPtr right) : left_(nullptr), op_(Op::Divide), right_(std::move(right)) {}
+  Multiplicative(MultiplicativePtr left, Op op, UnaryPtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Multiplicative() = default;
  private:
   MultiplicativePtr left_;
   Op op_;
-  std::variant<std::shared_ptr<Multiplicative>, UnaryPtr> right_;
+  UnaryPtr right_;
 };
 using MultiplicativePtr = std::shared_ptr<Multiplicative>;
 
 class Additive {
   using AdditivePtr = std::shared_ptr<Additive>;
  public:
-  using value_type = std::variant<AdditivePtr, MultiplicativePtr>;
   enum class Op {
     Add,
     Sub,
   };
-  Additive(AdditivePtr left, Op op, value_type right)
+  explicit Additive(MultiplicativePtr right) : left_(nullptr), op_(Op::Add), right_(std::move(right)) {}
+  Additive(AdditivePtr left, Op op, MultiplicativePtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Additive() = default;
  private:
   AdditivePtr left_;
   Op op_;
-  value_type right_;
+  MultiplicativePtr right_;
 };
 using AdditivePtr = std::shared_ptr<Additive>;
 
 class Relational {
   using RelationalPtr = std::shared_ptr<Relational>;
  public:
-  using value_type = std::variant<RelationalPtr, AdditivePtr>;
   enum class Op {
     Less,
     Greater,
     Le,
     Ge,
   };
-  Relational(RelationalPtr left, Op op, value_type right)
+  explicit Relational(AdditivePtr right) : left_(nullptr), op_(Op::Ge), right_(std::move(right)) {}
+  Relational(RelationalPtr left, Op op, AdditivePtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Relational() = default;
  private:
   RelationalPtr left_;
   Op op_;
-  value_type right_;
+  AdditivePtr right_;
 };
 using RelationalPtr = std::shared_ptr<Relational>;
 
 class Equality {
   using EqualityPtr = std::shared_ptr<Equality>;
  public:
-  using value_type = std::variant<EqualityPtr, RelationalPtr>;
   enum class Op {
     Equal,
     Nequal,
   };
-  Equality(EqualityPtr left, Op op, value_type right)
+  explicit Equality(RelationalPtr right) : left_(nullptr), op_(Op::Equal), right_(std::move(right)) {}
+  Equality(EqualityPtr left, Op op, RelationalPtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Equality() = default;
  private:
   EqualityPtr left_;
   Op op_;
-  value_type right_;
+  RelationalPtr right_;
 };
 using EqualityPtr = std::shared_ptr<Equality>;
 
 class LogicalAnd {
   using LogicalAndPtr = std::shared_ptr<LogicalAnd>;
  public:
-  using value_type = std::variant<LogicalAndPtr, EqualityPtr>;
-  LogicalAnd(LogicalAndPtr left, value_type right)
+  explicit LogicalAnd(EqualityPtr right) : left_(nullptr), right_(std::move(right)) {}
+  LogicalAnd(LogicalAndPtr left, EqualityPtr right)
       : left_(std::move(left)), right_(std::move(right)) {}
   ~LogicalAnd() = default;
  private:
   LogicalAndPtr left_;
-  value_type right_;
+  EqualityPtr right_;
 };
 using LogicalAndPtr = std::shared_ptr<LogicalAnd>;
 
 class LogicalOr {
   using LogicalOrPtr = std::shared_ptr<LogicalOr>;
-  using value_type = std::variant<LogicalOrPtr, LogicalAndPtr>;
  public:
-  LogicalOr(LogicalOrPtr left, value_type right)
+  explicit LogicalOr(LogicalAndPtr right) : left_(nullptr), right_(std::move(right)) {}
+  LogicalOr(LogicalOrPtr left, LogicalAndPtr right)
       : left_(std::move(left)), right_(std::move(right)) {}
   ~LogicalOr() = default;
  private:
   LogicalOrPtr left_;
-  value_type right_;
+  LogicalAndPtr right_;
 };
 using LogicalOrPtr = std::shared_ptr<LogicalOr>;
 
 class Conditional {
   using ConditionalPtr = std::shared_ptr<Conditional>;
  public:
-  Conditional(LogicalAndPtr cond, ExpressionPtr cond_true, ConditionalPtr cond_false)
+  Conditional(LogicalOrPtr cond, ExpressionPtr cond_true, ConditionalPtr cond_false)
       : cond_(std::move(cond)), cond_true_(std::move(cond_true)), cond_false_(std::move(cond_false)) {}
   ~Conditional() = default;
  private:
-  LogicalAndPtr cond_;
+  LogicalOrPtr cond_;
   ExpressionPtr cond_true_;
   ConditionalPtr cond_false_;
 };
@@ -246,6 +263,7 @@ class Expression {
 
 class ExpressionList {
  public:
+  ExpressionList() = default;
   explicit ExpressionList(std::vector<ExpressionPtr> exps)
       : expression_vec_(std::move(exps)) {}
   ~ExpressionList() = default;
@@ -255,11 +273,11 @@ class ExpressionList {
 
 class Declaration {
  public:
-  Declaration(const Variable &var, ExpressionPtr init_exp)
-      : var_(var), init_exp_(std::move(init_exp)) {}
+  Declaration(VariablePtr var, ExpressionPtr init_exp)
+      : var_(std::move(var)), init_exp_(std::move(init_exp)) {}
   ~Declaration() = default;
  private:
-  Variable var_;
+  VariablePtr var_;
   ExpressionPtr init_exp_;
 };
 using DeclarationPtr = std::shared_ptr<Declaration>;
@@ -429,33 +447,40 @@ using CompoundStatementPtr = std::shared_ptr<CompoundStatement>;
 
 class ParameterList {
  public:
-  explicit ParameterList(std::vector<Variable> vars) : variables_(std::move(vars)) {}
+  ParameterList() = default;
+  explicit ParameterList(std::vector<VariablePtr> vars) : variables_(std::move(vars)) {}
   ~ParameterList() = default;
  private:
-  std::vector<Variable> variables_;
+  std::vector<VariablePtr> variables_;
 };
 using ParameterListPtr = std::shared_ptr<ParameterList>;
 
 class BaseType {
  public:
-  enum Type {
-    Int,
-  };
-  explicit BaseType(Type type) : type_(type) {}
+  BaseType() : type_(SupportType::Int) {}
+  explicit BaseType(SupportType type) : type_(type) {}
   ~BaseType() = default;
+
+  SupportType type() { return type_; }
+  void set_type(SupportType type) { type_ = type; }
  private:
-  Type type_;
+  SupportType type_;
 };
 
 class Function {
  public:
-  Function(BaseType ret_type, ParameterListPtr parameter_list, CompoundStatementPtr compound_statement)
+  Function(BaseType ret_type,
+           std::string func_name,
+           ParameterListPtr parameter_list,
+           CompoundStatementPtr compound_statement)
       : ret_type_(ret_type),
+        func_name_(std::move(func_name)),
         parameter_list_(std::move(parameter_list)),
         compound_statement_(std::move(compound_statement)) {}
   ~Function() = default;
  private:
   BaseType ret_type_;
+  std::string func_name_;
   ParameterListPtr parameter_list_;
   CompoundStatementPtr compound_statement_;
 };

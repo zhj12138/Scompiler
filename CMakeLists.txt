@@ -8,7 +8,6 @@ include_directories(src/base)
 add_executable(Scompiler
         src/main.cpp
         src/base/token.cpp
-        src/base/token_stream.cpp
         src/base/variable.cpp
         src/base/symbol_table.cpp
         src/base/ast.cpp
