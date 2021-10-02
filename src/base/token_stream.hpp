@@ -35,7 +35,7 @@ class TokenStream {
     return id;
   }
   int consume_number() {
-    assert(is(TokenType::Identifier));
+    assert(is(TokenType::Number));
     auto number = token_vec_[cur_index_].get_number();
     advance();
     return number;

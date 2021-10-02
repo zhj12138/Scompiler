@@ -3,7 +3,7 @@
 
 #include "ast.hpp"
 
-class Visitor {
+class ASTVisitor {
  public:
   virtual void visit(ProgramPtr &program) = 0;
   virtual void visit(FunctionPtr &function) = 0;
@@ -26,6 +26,22 @@ class Visitor {
   virtual void visit(UnaryPtr &unary) = 0;
   virtual void visit(PostfixPtr &postfix) = 0;
   virtual void visit(PrimaryPtr &primary) = 0;
+};
+
+class DetailedASTVisitor : public ASTVisitor {
+ public:
+  virtual void visit(ReturnStatementPtr &return_statement) = 0;
+  virtual void visit(ExpStatementPtr &exp_statement) = 0;
+  virtual void visit(IfStatementPtr &if_statement) = 0;
+  virtual void visit(ForExpStatementPtr &for_exp_statement) = 0;
+  virtual void visit(ForDecStatementPtr &for_dec_statement) = 0;
+  virtual void visit(WhileStatementPtr &while_statement) = 0;
+  virtual void visit(DoStatementPtr &do_statement) = 0;
+  virtual void visit(BreakStatementPtr &break_statement) = 0;
+  virtual void visit(ContinueStatementPtr &continue_statement) = 0;
+  virtual void visit(AssignExpPtr &assign_exp) = 0;
+  virtual void visit(FuncCallPtr &func_call) = 0;
+  virtual void visit(ArrayPtr &array) = 0;
 };
 
 #endif //SCOMPILER_SRC_BASE_VISITOR_HPP_

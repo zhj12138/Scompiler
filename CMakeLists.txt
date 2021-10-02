@@ -8,9 +8,9 @@ include_directories(src/base)
 add_executable(Scompiler
         src/main.cpp
         src/base/token.cpp
-        src/base/variable.cpp
         src/base/symbol_table.cpp
         src/base/ast.cpp
+        src/base/debug.cpp
         src/lexer/handwritten_lexer.cpp
         src/lexer/spirit_lexer.cpp
         src/parser/recursive_descent_parser.cpp

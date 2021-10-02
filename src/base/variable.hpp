@@ -21,6 +21,11 @@ class Variable {
       : kind_(Kind::Array), type_(type), name_(std::move(name)), dimension_vec_(std::move(dimension_vec)) {
   }
   ~Variable() = default;
+
+  bool is_array() { return kind_ == Kind::Array; }
+  SupportType type() { return type_; }
+  std::string name() { return name_; }
+  std::vector<int> dimension_vec() { return dimension_vec_; }
  private:
   Kind kind_;
   SupportType type_;

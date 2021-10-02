@@ -95,8 +95,6 @@ class Token {
   value_type value_;
 };
 
-std::ostream &operator<<(std::ostream &os, const Token &token);
-
 Token get_token_by_identifier(const std::string &id);
 
 #endif //SCOMPILER_SRC_BASE_TOKEN_HPP_

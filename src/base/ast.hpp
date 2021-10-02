@@ -15,17 +15,11 @@ using ExpressionPtr = std::shared_ptr<Expression>;
 class Primary {
  public:
   using value_type = std::variant<int, ExpressionPtr, std::string>;
-  enum class Type {
-    Integer,
-    Expression,
-    Identifier,
-  };
-  explicit Primary(int v) : type_(Type::Integer), value_(v) {}
-  explicit Primary(const ExpressionPtr &exp) : type_(Type::Expression), value_(exp) {}
-  explicit Primary(const std::string &id) : type_(Type::Identifier), value_(id) {}
+  explicit Primary(value_type v) : value_(std::move(v)) {}
   ~Primary() = default;
+
+  value_type &value() { return value_; }
  private:
-  Type type_;
   value_type value_;
 };
 using PrimaryPtr = std::shared_ptr<Primary>;
@@ -38,55 +32,40 @@ class FuncCall {
   FuncCall(std::string &func_name, ExpressionListPtr exp_list)
       : func_name_(func_name), expression_list_(std::move(exp_list)) {}
   ~FuncCall() = default;
+
+  std::string &func_name() { return func_name_; }
+  ExpressionListPtr &expression_list() { return expression_list_; }
  private:
   std::string func_name_;
   ExpressionListPtr expression_list_;
 };
 using FuncCallPtr = std::shared_ptr<FuncCall>;
+
 // 因为当前不支持指针，所以其实Array解析的时候postfix只能递归到primary,而不能递归到func call，不过为了符合文法，还是支持该语法
 class Array {
-  using nameType = std::variant<FuncCallPtr, PrimaryPtr>;
-  enum class Type {
-    PrimaryName,
-    FuncCallName,
-  };
  public:
-  Array(FuncCallPtr name, std::vector<ExpressionPtr> expressions)
-      : type_(Type::FuncCallName),
-        name_(name),
-        expressions_(std::move(expressions)) {}
-  Array(PrimaryPtr name, std::vector<ExpressionPtr> expressions)
-      : type_(Type::PrimaryName),
-        name_(name),
-        expressions_(std::move(expressions)) {}
+  using value_type = std::variant<FuncCallPtr, PrimaryPtr>;
+  Array(value_type name, std::vector<ExpressionPtr> expressions)
+      : name_(std::move(name)),
+        expression_vec_(std::move(expressions)) {}
   ~Array() = default;
+
+  value_type &name() { return name_; }
+  std::vector<ExpressionPtr> &expression_vec() { return expression_vec_; }
  private:
-  Type type_;
-  nameType name_;
-  std::vector<ExpressionPtr> expressions_;
+  value_type name_;
+  std::vector<ExpressionPtr> expression_vec_;
 };
 using ArrayPtr = std::shared_ptr<Array>;
 
 class Postfix {
  public:
   using value_type = std::variant<PrimaryPtr, FuncCallPtr, ArrayPtr>;
-  enum class Type {
-    Primary,
-    FuncCall,
-    Array,
-  };
-  explicit Postfix(const PrimaryPtr &p) : type_(Type::Primary), value_(p) {}
-  explicit Postfix(const FuncCallPtr &p)
-      : type_(Type::FuncCall), value_(p) {}
-  Postfix(const PrimaryPtr &name, const std::vector<ExpressionPtr> &exps)
-      : type_(Type::FuncCall),
-        value_(std::make_shared<Array>(name, exps)) {}
-  Postfix(const FuncCallPtr &name, const std::vector<ExpressionPtr> &exps)
-      : type_(Type::FuncCall),
-        value_(std::make_shared<Array>(name, exps)) {}
+  explicit Postfix(value_type p) : value_(std::move(p)) {}
   ~Postfix() = default;
+
+  value_type &value() { return value_; }
  private:
-  Type type_;
   value_type value_;
 };
 using PostfixPtr = std::shared_ptr<Postfix>;
@@ -104,6 +83,9 @@ class Unary {
   Unary(Op op, UnaryPtr value)
       : op_(op), value_(std::move(value)) {}
   ~Unary() = default;
+
+  Op &op() { return op_; }
+  value_type &value() { return value_; }
  private:
   Op op_;
   value_type value_;
@@ -122,6 +104,10 @@ class Multiplicative {
   Multiplicative(MultiplicativePtr left, Op op, UnaryPtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Multiplicative() = default;
+
+  MultiplicativePtr &left() { return left_; }
+  Op &op() { return op_; }
+  UnaryPtr &right() { return right_; }
  private:
   MultiplicativePtr left_;
   Op op_;
@@ -140,6 +126,10 @@ class Additive {
   Additive(AdditivePtr left, Op op, MultiplicativePtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Additive() = default;
+
+  AdditivePtr &left() { return left_; }
+  Op &op() { return op_; }
+  MultiplicativePtr &right() { return right_; }
  private:
   AdditivePtr left_;
   Op op_;
@@ -160,6 +150,10 @@ class Relational {
   Relational(RelationalPtr left, Op op, AdditivePtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Relational() = default;
+
+  RelationalPtr &left() { return left_; }
+  Op &op() { return op_; }
+  AdditivePtr &right() { return right_; }
  private:
   RelationalPtr left_;
   Op op_;
@@ -178,6 +172,10 @@ class Equality {
   Equality(EqualityPtr left, Op op, RelationalPtr right)
       : left_(std::move(left)), op_(op), right_(std::move(right)) {}
   ~Equality() = default;
+
+  EqualityPtr &left() { return left_; }
+  Op &op() { return op_; }
+  RelationalPtr &right() { return right_; }
  private:
   EqualityPtr left_;
   Op op_;
@@ -192,6 +190,9 @@ class LogicalAnd {
   LogicalAnd(LogicalAndPtr left, EqualityPtr right)
       : left_(std::move(left)), right_(std::move(right)) {}
   ~LogicalAnd() = default;
+
+  LogicalAndPtr &left() { return left_; }
+  EqualityPtr &right() { return right_; }
  private:
   LogicalAndPtr left_;
   EqualityPtr right_;
@@ -205,8 +206,11 @@ class LogicalOr {
   LogicalOr(LogicalOrPtr left, LogicalAndPtr right)
       : left_(std::move(left)), right_(std::move(right)) {}
   ~LogicalOr() = default;
+
+  LogicalOrPtr &left() { return left_; }
+  LogicalAndPtr &right() { return right_; }
  private:
-  LogicalOrPtr left_;
+  LogicalOrPtr left_; // nullptr for only logical_and
   LogicalAndPtr right_;
 };
 using LogicalOrPtr = std::shared_ptr<LogicalOr>;
@@ -217,6 +221,9 @@ class Conditional {
   Conditional(LogicalOrPtr cond, ExpressionPtr cond_true, ConditionalPtr cond_false)
       : cond_(std::move(cond)), cond_true_(std::move(cond_true)), cond_false_(std::move(cond_false)) {}
   ~Conditional() = default;
+  LogicalOrPtr &cond() { return cond_; }
+  ExpressionPtr &cond_true() { return cond_true_; }
+  ConditionalPtr &cond_false() { return cond_false_; }
  private:
   LogicalOrPtr cond_;
   ExpressionPtr cond_true_;
@@ -224,30 +231,29 @@ class Conditional {
 };
 using ConditionalPtr = std::shared_ptr<Conditional>;
 
+// unary '=' expression
+class AssignExp {
+ public:
+  AssignExp(UnaryPtr left, ExpressionPtr right)
+      : left_(std::move(left)), right_(std::move(right)) {}
+  ~AssignExp() = default;
+
+  UnaryPtr &left() { return left_; }
+  ExpressionPtr &right() { return right_; }
+ private:
+  UnaryPtr left_;
+  ExpressionPtr right_;
+};
+using AssignExpPtr = std::shared_ptr<AssignExp>;
+
 class Assignment {
-  class AssignExp {
-   public:
-    AssignExp(UnaryPtr left, ExpressionPtr right)
-        : left_(std::move(left)), right_(std::move(right)) {}
-    ~AssignExp() = default;
-   private:
-    UnaryPtr left_;
-    ExpressionPtr right_;
-  };
-  using AssignExpPtr = std::shared_ptr<AssignExp>;
  public:
   using value_type = std::variant<ConditionalPtr, AssignExpPtr>;
-  enum class Type {
-    Cond,
-    Assign,
-  };
-  explicit Assignment(const ConditionalPtr &v)
-      : type_(Type::Cond), value_(v) {}
-  Assignment(const UnaryPtr &left, const ExpressionPtr &right)
-      : type_(Type::Assign), value_(std::make_shared<AssignExp>(left, right)) {}
+  explicit Assignment(value_type v) : value_(std::move(v)) {}
   ~Assignment() = default;
+
+  value_type &value() { return value_; }
  private:
-  Type type_;
   value_type value_;
 };
 using AssignmentPtr = std::shared_ptr<Assignment>;
@@ -257,6 +263,7 @@ class Expression {
   explicit Expression(AssignmentPtr assignment)
       : assignment_(std::move(assignment)) {}
   ~Expression() = default;
+  AssignmentPtr &assignment() { return assignment_; }
  private:
   AssignmentPtr assignment_;
 };
@@ -267,6 +274,8 @@ class ExpressionList {
   explicit ExpressionList(std::vector<ExpressionPtr> exps)
       : expression_vec_(std::move(exps)) {}
   ~ExpressionList() = default;
+
+  std::vector<ExpressionPtr> &expression_vec() { return expression_vec_; }
  private:
   std::vector<ExpressionPtr> expression_vec_;
 };
@@ -276,162 +285,169 @@ class Declaration {
   Declaration(VariablePtr var, ExpressionPtr init_exp)
       : var_(std::move(var)), init_exp_(std::move(init_exp)) {}
   ~Declaration() = default;
+  VariablePtr &var() { return var_; }
+  ExpressionPtr &init_exp() { return init_exp_;}
  private:
   VariablePtr var_;
-  ExpressionPtr init_exp_;
+  ExpressionPtr init_exp_;  // nullptr for not initialized
 };
 using DeclarationPtr = std::shared_ptr<Declaration>;
 
+class Statement;
+using StatementPtr = std::shared_ptr<Statement>;
+class CompoundStatement;
+using CompoundStatementPtr = std::shared_ptr<CompoundStatement>;
+
+// 'return' expression ';'
+class ReturnStatement {
+ public:
+  explicit ReturnStatement(ExpressionPtr exp) : exp_(std::move(exp)) {}
+  ~ReturnStatement() = default;
+
+  ExpressionPtr &exp() { return exp_; }
+ private:
+  ExpressionPtr exp_;
+};
+// expression? ';'
+class ExpStatement {
+ public:
+  explicit ExpStatement(ExpressionPtr exp) : exp_(std::move(exp)) {}
+  ~ExpStatement() = default;
+
+  ExpressionPtr &exp() { return exp_; }
+ private:
+  ExpressionPtr exp_;
+};
+// 'if' '(' expression ')' statement ('else' statement)?
+class IfStatement {
+ public:
+  IfStatement(ExpressionPtr cond_exp, StatementPtr if_stmt_, StatementPtr else_stmt_)
+      : cond_exp_(std::move(cond_exp)), if_stmt_(std::move(if_stmt_)), else_stmt_(std::move(else_stmt_)) {}
+  ~IfStatement() = default;
+  ExpressionPtr &cond_exp() { return cond_exp_; }
+  StatementPtr &if_stmt() { return if_stmt_; }
+  StatementPtr &else_stmt() { return else_stmt_; }
+ private:
+  ExpressionPtr cond_exp_;
+  StatementPtr if_stmt_;
+  StatementPtr else_stmt_;
+};
+// 'for' '(' expression? ';' expression? ';' expression? ')' statement
+class ForExpStatement {
+ public:
+  ForExpStatement(ExpressionPtr init_exp,
+                  ExpressionPtr cond_exp,
+                  ExpressionPtr update_exp,
+                  StatementPtr statement)
+      : init_exp_(std::move(init_exp)),
+        cond_exp_(std::move(cond_exp)),
+        update_exp_(std::move(update_exp)),
+        statement_(std::move(statement)) {}
+  ~ForExpStatement() = default;
+
+  ExpressionPtr &init_exp() { return init_exp_; }
+  ExpressionPtr &cond_exp() { return cond_exp_; }
+  ExpressionPtr &update_exp() { return update_exp_; }
+  StatementPtr &statement() { return statement_; }
+ private:
+  ExpressionPtr init_exp_;
+  ExpressionPtr cond_exp_;
+  ExpressionPtr update_exp_;
+  StatementPtr statement_;
+};
+// 'for' '(' declaration expression? ';' expression? ')' statement
+class ForDecStatement {
+ public:
+  ForDecStatement(DeclarationPtr init_decl,
+                  ExpressionPtr cond_exp,
+                  ExpressionPtr update_exp,
+                  StatementPtr statement)
+      : init_decl_(std::move(init_decl)),
+        cond_exp_(std::move(cond_exp)),
+        update_exp_(std::move(update_exp)),
+        statement_(std::move(statement)) {}
+  ~ForDecStatement() = default;
+
+  DeclarationPtr &init_decl() { return init_decl_; }
+  ExpressionPtr &cond_exp() { return cond_exp_; }
+  ExpressionPtr &update_exp() { return update_exp_; }
+  StatementPtr &statement() { return statement_; }
+ private:
+  DeclarationPtr init_decl_;
+  ExpressionPtr cond_exp_;
+  ExpressionPtr update_exp_;
+  StatementPtr statement_;
+};
+// 'while' '(' expression ')' statement
+class WhileStatement {
+ public:
+  WhileStatement(ExpressionPtr cond_exp, StatementPtr statement)
+      : cond_exp_(std::move(cond_exp)), statement_(std::move(statement)) {}
+  ~WhileStatement() = default;
+
+  ExpressionPtr &cond_exp() { return cond_exp_; }
+  StatementPtr &statement() { return statement_; }
+ private:
+  ExpressionPtr cond_exp_;
+  StatementPtr statement_;
+};
+// 'do' statement 'while' '(' expression ')' ';'
+class DoStatement {
+ public:
+  DoStatement(StatementPtr statement, ExpressionPtr cond_exp)
+      : statement_(std::move(statement)), cond_exp_(std::move(cond_exp)) {}
+  ~DoStatement() = default;
+
+  StatementPtr &statement() { return statement_; }
+  ExpressionPtr &cond_exp() { return cond_exp_; }
+ private:
+  StatementPtr statement_;
+  ExpressionPtr cond_exp_;
+};
+// 'break' ';'
+class BreakStatement {};
+// 'continue' ';'
+class ContinueStatement {};
+
+using ReturnStatementPtr = std::shared_ptr<ReturnStatement>;
+using ExpStatementPtr = std::shared_ptr<ExpStatement>;
+using IfStatementPtr = std::shared_ptr<IfStatement>;
+using ForExpStatementPtr = std::shared_ptr<ForExpStatement>;
+using ForDecStatementPtr = std::shared_ptr<ForDecStatement>;
+using WhileStatementPtr = std::shared_ptr<WhileStatement>;
+using DoStatementPtr = std::shared_ptr<DoStatement>;
+using BreakStatementPtr = std::shared_ptr<BreakStatement>;
+using ContinueStatementPtr = std::shared_ptr<ContinueStatement>;
+
 class Statement {
-  using StatementPtr = std::shared_ptr<Statement>;
-  class ReturnStatement {
-   public:
-    explicit ReturnStatement(ExpressionPtr exp) : exp_(std::move(exp)) {}
-    ~ReturnStatement() = default;
-   private:
-    ExpressionPtr exp_;
-  };
-  class ExpStatement {
-   public:
-    explicit ExpStatement(ExpressionPtr exp) : exp_(std::move(exp)) {}
-    ~ExpStatement() = default;
-   private:
-    ExpressionPtr exp_;
-  };
-  class IfStatement {
-   public:
-    IfStatement(ExpressionPtr cond_exp, StatementPtr if_stmt_, StatementPtr else_stmt_)
-        : cond_exp_(std::move(cond_exp)), if_stmt_(std::move(if_stmt_)), else_stmt_(std::move(else_stmt_)) {}
-    ~IfStatement() = default;
-   private:
-    ExpressionPtr cond_exp_;
-    StatementPtr if_stmt_;
-    StatementPtr else_stmt_;
-  };
-  class ForExpStatement {
-   public:
-    ForExpStatement(ExpressionPtr init_exp,
-                    ExpressionPtr cond_exp,
-                    ExpressionPtr update_exp,
-                    StatementPtr statement)
-        : init_exp_(std::move(init_exp)),
-          cond_exp_(std::move(cond_exp)),
-          update_exp_(std::move(update_exp)),
-          statement_(std::move(statement)) {}
-    ~ForExpStatement() = default;
-   private:
-    ExpressionPtr init_exp_;
-    ExpressionPtr cond_exp_;
-    ExpressionPtr update_exp_;
-    StatementPtr statement_;
-  };
-  class ForDecStatement {
-   public:
-    ForDecStatement(DeclarationPtr init_decl,
-                    ExpressionPtr cond_exp,
-                    ExpressionPtr update_exp,
-                    StatementPtr statement)
-        : init_decl_(std::move(init_decl)),
-          cond_exp_(std::move(cond_exp)),
-          update_exp_(std::move(update_exp)),
-          statement_(std::move(statement)) {}
-    ~ForDecStatement() = default;
-   private:
-    DeclarationPtr init_decl_;
-    ExpressionPtr cond_exp_;
-    ExpressionPtr update_exp_;
-    StatementPtr statement_;
-  };
-  class WhileStatement {
-   public:
-    WhileStatement(ExpressionPtr cond_exp, StatementPtr statement)
-        : cond_exp_(std::move(cond_exp)), statement_(std::move(statement)) {}
-    ~WhileStatement() = default;
-   private:
-    ExpressionPtr cond_exp_;
-    StatementPtr statement_;
-  };
-  class DoStatement {
-   public:
-    DoStatement(StatementPtr statement, ExpressionPtr cond_exp)
-        : statement_(std::move(statement)), cond_exp_(std::move(cond_exp)) {}
-    ~DoStatement() = default;
-   private:
-    StatementPtr statement_;
-    ExpressionPtr cond_exp_;
-  };
-  using ReturnStatementPtr = std::shared_ptr<ReturnStatement>;
-  using ExpStatementPtr = std::shared_ptr<ExpStatement>;
-  using IfStatementPtr = std::shared_ptr<IfStatement>;
-  using ForExpStatementPtr = std::shared_ptr<ForExpStatement>;
-  using ForDecStatementPtr = std::shared_ptr<ForDecStatement>;
-  using WhileStatementPtr = std::shared_ptr<WhileStatement>;
-  using DoStatementPtr = std::shared_ptr<DoStatement>;
  public:
   using value_type = std::variant<ReturnStatementPtr,
                                   ExpStatementPtr,
                                   IfStatementPtr,
+                                  CompoundStatementPtr,
                                   ForExpStatementPtr,
                                   ForDecStatementPtr,
                                   WhileStatementPtr,
-                                  DoStatementPtr>;
-  enum class Type {
-    Return,
-    Exp,
-    If,
-    ForExp,
-    ForDec,
-    While,
-    Do,
-    Break,
-    Continue,
-  };
-  Statement(Type type, const ExpressionPtr &exp) : type_(Type::Return), value_(std::make_shared<ReturnStatement>(exp)) {
-    assert(type == Type::Return);
-  }
-  explicit Statement(const ExpressionPtr &exp) : type_(Type::Exp), value_(std::make_shared<ExpStatement>(exp)) {}
-  Statement(const ExpressionPtr &cond_exp,
-            const StatementPtr &if_stmt,
-            const StatementPtr &else_stmt)
-      : type_(Type::If), value_(std::make_shared<IfStatement>(cond_exp, if_stmt, else_stmt)) {}
-  Statement(const ExpressionPtr &init_exp,
-            const ExpressionPtr &cond_exp,
-            const ExpressionPtr &update_exp,
-            const StatementPtr &stmt)
-      : type_(Type::ForExp), value_(std::make_shared<ForExpStatement>(init_exp, cond_exp, update_exp, stmt)) {}
-  Statement(const DeclarationPtr &init_decl,
-            const ExpressionPtr &cond_exp,
-            const ExpressionPtr &update_exp,
-            const StatementPtr &stmt)
-      : type_(Type::ForDec), value_(std::make_shared<ForDecStatement>(init_decl, cond_exp, update_exp, stmt)) {}
-  Statement(const ExpressionPtr &cond_exp,
-            const StatementPtr &stmt)
-      : type_(Type::While), value_(std::make_shared<WhileStatement>(cond_exp, stmt)) {}
-  Statement(const StatementPtr &stmt,
-            const ExpressionPtr &cond_exp)
-      : type_(Type::Do), value_(std::make_shared<DoStatement>(stmt, cond_exp)) {}
-  explicit Statement(Type type) : type_(type) {
-    assert(type == Type::Break || type == Type::Continue);
-  }
+                                  DoStatementPtr,
+                                  BreakStatementPtr,
+                                  ContinueStatementPtr>;
+  explicit Statement(value_type p) : value_(std::move(p)) {}
   ~Statement() = default;
+
+  value_type &value() { return value_; }
  private:
-  Type type_;
   value_type value_;
 };
-using StatementPtr = std::shared_ptr<Statement>;
 
 class BlockItem {
   using value_type = std::variant<StatementPtr, DeclarationPtr>;
  public:
-  enum class Type {
-    Stmt,
-    Decl,
-  };
-  explicit BlockItem(const StatementPtr &stmt) : type_(Type::Stmt), value_(stmt) {}
-  explicit BlockItem(const DeclarationPtr &decl) : type_(Type::Stmt), value_(decl) {}
+  explicit BlockItem(const StatementPtr &stmt) : value_(stmt) {}
+  explicit BlockItem(const DeclarationPtr &decl) : value_(decl) {}
   ~BlockItem() = default;
+
+  value_type &value() { return value_; }
  private:
-  Type type_;
   value_type value_;
 };
 using BlockItemPtr = std::shared_ptr<BlockItem>;
@@ -440,6 +456,7 @@ class CompoundStatement {
  public:
   explicit CompoundStatement(std::vector<BlockItemPtr> vec) : block_item_vec_(std::move(vec)) {}
   ~CompoundStatement() = default;
+  std::vector<BlockItemPtr> &block_item_vec() { return block_item_vec_; }
  private:
   std::vector<BlockItemPtr> block_item_vec_;
 };
@@ -448,10 +465,11 @@ using CompoundStatementPtr = std::shared_ptr<CompoundStatement>;
 class ParameterList {
  public:
   ParameterList() = default;
-  explicit ParameterList(std::vector<VariablePtr> vars) : variables_(std::move(vars)) {}
+  explicit ParameterList(std::vector<VariablePtr> vars) : variable_vec_(std::move(vars)) {}
   ~ParameterList() = default;
+  std::vector<VariablePtr> &variables() { return variable_vec_; }
  private:
-  std::vector<VariablePtr> variables_;
+  std::vector<VariablePtr> variable_vec_;
 };
 using ParameterListPtr = std::shared_ptr<ParameterList>;
 
@@ -461,7 +479,7 @@ class BaseType {
   explicit BaseType(SupportType type) : type_(type) {}
   ~BaseType() = default;
 
-  SupportType type() { return type_; }
+  SupportType &type() { return type_; }
   void set_type(SupportType type) { type_ = type; }
  private:
   SupportType type_;
@@ -478,22 +496,30 @@ class Function {
         parameter_list_(std::move(parameter_list)),
         compound_statement_(std::move(compound_statement)) {}
   ~Function() = default;
+
+  std::string &name() { return func_name_; }
+  BaseType &ret_type() { return ret_type_; }
+  ParameterListPtr &parameter_list() { return parameter_list_; }
+  CompoundStatementPtr &compound_statement() { return compound_statement_; }
  private:
   BaseType ret_type_;
   std::string func_name_;
   ParameterListPtr parameter_list_;
-  CompoundStatementPtr compound_statement_;
+  CompoundStatementPtr compound_statement_; // nullptr for declaration
 };
 using FunctionPtr = std::shared_ptr<Function>;
 
 class Program {
  public:
   Program(std::vector<FunctionPtr> functions, std::vector<DeclarationPtr> declarations)
-      : functions_(std::move(functions)), declarations_(std::move(declarations)) {}
+      : function_vec_(std::move(functions)), declaration_vec_(std::move(declarations)) {}
   ~Program() = default;
+
+  std::vector<FunctionPtr> &functions() { return function_vec_; }
+  std::vector<DeclarationPtr> &declarations() { return declaration_vec_; }
  private:
-  std::vector<FunctionPtr> functions_;
-  std::vector<DeclarationPtr> declarations_;
+  std::vector<FunctionPtr> function_vec_;
+  std::vector<DeclarationPtr> declaration_vec_;
 };
 using ProgramPtr = std::shared_ptr<Program>;
 

@@ -4,7 +4,7 @@
 #include "visitor.hpp"
 #include "token_stream.hpp"
 
-class RecursiveDescentParser : Visitor {
+class RecursiveDescentParser : ASTVisitor {
  public:
   explicit RecursiveDescentParser(TokenStream &token_stream) : token_stream_(token_stream) {}
   ~RecursiveDescentParser() = default;

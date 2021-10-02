@@ -1,11 +1,12 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 
-#include <algorithm>
+/* for debug */
+#include "debug.hpp"
 
 int main() {
-  auto token_stream = lex_file("../test/lex.c");
-  std::for_each(token_stream.begin(), token_stream.end(), [](auto token) {
-    std::cout << token << "\n";
-  });
+  auto token_stream = lex_file("../test/simple.c");
+  std::cout << token_stream << std::endl;
+  ProgramPtr program = parse(token_stream);
+  std::cout << program << std::endl;
 }

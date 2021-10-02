@@ -108,7 +108,7 @@ void RecursiveDescentParser::visit(StatementPtr &statement) {
     visit(expression);
     token_stream_.consume(TokenType::Semicolon);
 
-    statement = std::make_shared<Statement>(Statement::Type::Return, expression);
+    statement = std::make_shared<Statement>(std::make_shared<ReturnStatement>(expression));
   } else if (token_stream_.is(TokenType::If)) {
     ExpressionPtr cond_exp;
     StatementPtr if_stmt;
@@ -118,12 +118,17 @@ void RecursiveDescentParser::visit(StatementPtr &statement) {
     token_stream_.consume(TokenType::Lparen);
     visit(cond_exp);
     token_stream_.consume(TokenType::Rparen);
+    visit(if_stmt);
     if (token_stream_.is(TokenType::Else)) {  // has else branch
       token_stream_.advance();
       visit(else_stmt);
     }
 
-    statement = std::make_shared<Statement>(cond_exp, if_stmt, else_stmt);
+    statement = std::make_shared<Statement>(std::make_shared<IfStatement>(cond_exp, if_stmt, else_stmt));
+  } else if (token_stream_.is(TokenType::LCbrace)) {  // compound statement
+    CompoundStatementPtr compound_statement;
+    visit(compound_statement);
+    statement = std::make_shared<Statement>(compound_statement);
   } else if (token_stream_.is(TokenType::For)) {
     ExpressionPtr cond_exp;
     ExpressionPtr update_exp;
@@ -145,7 +150,10 @@ void RecursiveDescentParser::visit(StatementPtr &statement) {
       token_stream_.consume(TokenType::Rparen);
       visit(loop_statement);
 
-      statement = std::make_shared<Statement>(init_decl, cond_exp, update_exp, loop_statement);
+      statement = std::make_shared<Statement>(std::make_shared<ForDecStatement>(init_decl,
+                                                                                cond_exp,
+                                                                                update_exp,
+                                                                                loop_statement));
     } else {  // expression
       ExpressionPtr init_exp;
 
@@ -163,7 +171,10 @@ void RecursiveDescentParser::visit(StatementPtr &statement) {
       token_stream_.consume(TokenType::Rparen);
       visit(loop_statement);
 
-      statement = std::make_shared<Statement>(init_exp, cond_exp, update_exp, loop_statement);
+      statement = std::make_shared<Statement>(std::make_shared<ForExpStatement>(init_exp,
+                                                                                cond_exp,
+                                                                                update_exp,
+                                                                                loop_statement));
     }
   } else if (token_stream_.is(TokenType::While)) {
     ExpressionPtr cond_exp;
@@ -175,7 +186,7 @@ void RecursiveDescentParser::visit(StatementPtr &statement) {
     token_stream_.consume(TokenType::Rparen);
     visit(loop_statement);
 
-    statement = std::make_shared<Statement>(cond_exp, loop_statement);
+    statement = std::make_shared<Statement>(std::make_shared<WhileStatement>(cond_exp, loop_statement));
   } else if (token_stream_.is(TokenType::Do)) {
     StatementPtr loop_statement;
     ExpressionPtr cond_exp;
@@ -188,25 +199,26 @@ void RecursiveDescentParser::visit(StatementPtr &statement) {
     token_stream_.consume(TokenType::Rparen);
     token_stream_.consume(TokenType::Semicolon);
 
-    statement = std::make_shared<Statement>(loop_statement, cond_exp);
+    statement = std::make_shared<Statement>(std::make_shared<DoStatement>(loop_statement, cond_exp));
   } else if (token_stream_.is(TokenType::Break)) {
     token_stream_.advance();
     token_stream_.consume(TokenType::Semicolon);
 
-    statement = std::make_shared<Statement>(Statement::Type::Break);
+    statement = std::make_shared<Statement>(std::make_shared<BreakStatement>());
   } else if (token_stream_.is(TokenType::Continue)) {
     token_stream_.advance();
     token_stream_.consume(TokenType::Semicolon);
 
-    statement = std::make_shared<Statement>(Statement::Type::Continue);
+    statement = std::make_shared<Statement>(std::make_shared<ContinueStatement>());
   } else {  // ExpStatement
     ExpressionPtr exp;
 
     if (!token_stream_.is(TokenType::Semicolon)) {  // non-empty expression
       visit(exp);
     }
+    token_stream_.consume(TokenType::Semicolon);
 
-    statement = std::make_shared<Statement>(exp);
+    statement = std::make_shared<Statement>(std::make_shared<ExpStatement>(exp));
   }
 }
 
@@ -263,17 +275,14 @@ void RecursiveDescentParser::visit(AssignmentPtr &assignment) {
   ExpressionPtr right;
   ConditionalPtr conditional;
 
-  auto status = token_stream_.store();
-  visit(left);
-  if (token_stream_.is(TokenType::Assign)) {  // AssignExp
+  visit(conditional);
+  if (token_stream_.is(TokenType::Assign)) {  // unary '=' expression
+    // check conditional is unary
+    left = conditional->cond()->right()->right()->right()->right()->right()->right();
     token_stream_.advance();
     visit(right);
-
-    assignment = std::make_shared<Assignment>(left, right);
+    assignment = std::make_shared<Assignment>(std::make_shared<AssignExp>(left, right));
   } else {  // conditional
-    token_stream_.restore(status);  // restore to old status
-    visit(conditional);
-
     assignment = std::make_shared<Assignment>(conditional);
   }
 }
@@ -469,7 +478,7 @@ void RecursiveDescentParser::visit(PostfixPtr &postfix) {
     token_stream_.consume(TokenType::Rparen);
 
     func_call = std::make_shared<FuncCall>(func_name, expression_list);
-  } else {
+  } else {  // primary
     is_primary = true;
     visit(primary);
   }
@@ -488,9 +497,9 @@ void RecursiveDescentParser::visit(PostfixPtr &postfix) {
     }
   } else {
     if (is_primary) { // primary
-      postfix = std::make_shared<Postfix>(primary, expression_vec);
+      postfix = std::make_shared<Postfix>(std::make_shared<Array>(primary, expression_vec));
     } else {  // func call
-      postfix = std::make_shared<Postfix>(func_call, expression_vec);
+      postfix = std::make_shared<Postfix>(std::make_shared<Array>(func_call, expression_vec));
     }
   }
 }
