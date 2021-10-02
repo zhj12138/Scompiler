@@ -7,22 +7,21 @@ ProgramPtr RecursiveDescentParser::parse() {
 }
 
 void RecursiveDescentParser::visit(ProgramPtr &program) {
-  std::vector<FunctionPtr> function_vec;
-  std::vector<DeclarationPtr> declaration_vec;
+  std::vector<Program::value_type> func_decl_vec;
 
   while (!token_stream_.eof()) {  // still has tokens
     if (token_stream_.look_ahead(2, TokenType::Lparen)) { // function
       FunctionPtr function;
       visit(function);
-      function_vec.push_back(function);
+      func_decl_vec.emplace_back(function);
     } else { // declaration
       DeclarationPtr declaration;
       visit(declaration);
-      declaration_vec.push_back(declaration);
+      func_decl_vec.emplace_back(declaration);
     }
   }
 
-  program = std::make_shared<Program>(function_vec, declaration_vec);
+  program = std::make_shared<Program>(func_decl_vec);
 }
 
 void RecursiveDescentParser::visit(FunctionPtr &function) {
@@ -275,14 +274,17 @@ void RecursiveDescentParser::visit(AssignmentPtr &assignment) {
   ExpressionPtr right;
   ConditionalPtr conditional;
 
-  visit(conditional);
-  if (token_stream_.is(TokenType::Assign)) {  // unary '=' expression
-    // check conditional is unary
-    left = conditional->cond()->right()->right()->right()->right()->right()->right();
+  auto status = token_stream_.store();
+  visit(left);
+  if (token_stream_.is(TokenType::Assign)) {  // AssignExp
     token_stream_.advance();
     visit(right);
+
     assignment = std::make_shared<Assignment>(std::make_shared<AssignExp>(left, right));
   } else {  // conditional
+    token_stream_.restore(status);  // restore to old status
+    visit(conditional);
+
     assignment = std::make_shared<Assignment>(conditional);
   }
 }

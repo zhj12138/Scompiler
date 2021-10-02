@@ -79,13 +79,16 @@ std::string to_string(SupportType type) {
   return "";
 }
 
-std::ostream &operator<<(std::ostream &os, Variable &variable) {
-  os << "name: " << variable.name() << " type: " << to_string(variable.type());
-  if (variable.is_array()) {
-    for (const int dim : variable.dimension_vec()) {
-      os << "[" << dim << "]";
-    }
+std::ostream &operator<<(std::ostream &os, VariableType &variable) {
+  os << to_string(variable.type());
+  for (auto &dim : variable.dimension_vec()) {
+    os << "[" << dim << "]";
   }
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, Variable &variable) {
+  os << "name: " << variable.name() << ", type: " << variable.type();
   return os;
 }
 
@@ -136,27 +139,27 @@ class ASTPrinter : public DetailedASTVisitor {
 
   void visit(ProgramPtr &program) override {
     os << "program\n";
-    auto total_num = program->functions().size() + program->declarations().size();
+    auto total_num = program->func_decl_vec().size();
     int cur_num = 0;
     auto stored_prefix = append_prefix(prefix_, true);
 
-    for (auto &decl : program->declarations()) {
+    for (auto &item : program->func_decl_vec()) {
       ++cur_num;
       is_end_ = (cur_num == total_num);
       prefix_ = stored_prefix;
-      visit(decl);
-    }
-    for (auto &func : program->functions()) {
-      ++cur_num;
-      is_end_ = (cur_num == total_num);
-      prefix_ = stored_prefix;
-      visit(func);
+      if (std::holds_alternative<FunctionPtr>(item)) {
+        visit(std::get<FunctionPtr>(item));
+      } else if (std::holds_alternative<DeclarationPtr>(item)) {
+        visit(std::get<DeclarationPtr>(item));
+      } else {
+        assert(false);
+      }
     }
   }
   void visit(FunctionPtr &function) override {
     auto stored_prefix = append_prefix(prefix_);
     print_front();
-    os << "function: " << function->name() << "\n";
+    os << "function(" << function->name() << ")\n";
     is_end_ = false;
     prefix_ = stored_prefix;
     visit(function->ret_type());
@@ -193,7 +196,7 @@ class ASTPrinter : public DetailedASTVisitor {
   void visit(VariablePtr &variable) {
     auto stored_prefix = append_prefix(prefix_);
     print_front();
-    os << "variable: " << *variable << "\n";
+    os << "variable(" << *variable << ")\n";
   }
   void visit(CompoundStatementPtr &compound_statement) override {
     auto stored_prefix = append_prefix(prefix_);

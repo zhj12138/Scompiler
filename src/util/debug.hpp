@@ -8,6 +8,7 @@
 
 std::ostream &operator<<(std::ostream &os, const Token &token);
 std::ostream &operator<<(std::ostream &os, TokenStream &token_stream);
+std::ostream &operator<<(std::ostream &os, VariableType &variable);
 std::ostream &operator<<(std::ostream &os, Variable &variable);
 std::ostream &operator<<(std::ostream &os, ProgramPtr &program);
 

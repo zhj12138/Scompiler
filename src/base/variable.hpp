@@ -9,28 +9,33 @@
 #include <utility>
 #include <vector>
 
+class VariableType {
+ public:
+  explicit VariableType(SupportType type) : type_(type) {}
+  VariableType(SupportType type, std::vector<int> dim_vec) : type_(type), dimension_vec_(std::move(dim_vec)) {}
+
+  [[nodiscard]] bool is_array() const { return !dimension_vec_.empty(); }
+  SupportType &type() { return type_; }
+  std::vector<int> &dimension_vec() { return dimension_vec_; };
+ private:
+  SupportType type_;
+  std::vector<int> dimension_vec_;
+};
+
 class Variable {
-  enum class Kind {
-    Base,
-    Array,
-  };
  public:
   Variable(SupportType type, std::string name)
-      : kind_(Kind::Base), type_(type), name_(std::move(name)) {}
+      : type_(type), name_(std::move(name)) {}
   Variable(SupportType type, std::vector<int> dimension_vec, std::string name)
-      : kind_(Kind::Array), type_(type), name_(std::move(name)), dimension_vec_(std::move(dimension_vec)) {
+      : type_(type, std::move(dimension_vec)), name_(std::move(name)) {
   }
   ~Variable() = default;
 
-  bool is_array() { return kind_ == Kind::Array; }
-  SupportType type() { return type_; }
-  std::string name() { return name_; }
-  std::vector<int> dimension_vec() { return dimension_vec_; }
+  VariableType &type() { return type_; }
+  std::string &name() { return name_; }
  private:
-  Kind kind_;
-  SupportType type_;
+  VariableType type_;
   std::string name_;
-  std::vector<int> dimension_vec_;
 };
 using VariablePtr = std::shared_ptr<Variable>;
 

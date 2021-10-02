@@ -1,6 +1,6 @@
 int func(int a) {
-  int a;
-  int b = 10;
-  a = (1 + 3 + 5 - 6 * 7 - 7 / 5 % 6) || (3) && (b);
+  int a[3][4];
+  int b[5][7][9];
+  int c = 10;
   return 0;
 }

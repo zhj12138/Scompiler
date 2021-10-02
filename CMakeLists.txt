@@ -10,14 +10,14 @@ include_directories(src/third_party)
 
 add_executable(Scompiler
         src/main.cpp
-        src/base/config.cpp
+        src/util/config.cpp
         src/base/token.cpp
-        src/base/symbol_table.cpp
         src/base/ast.cpp
         src/util/debug.cpp
         src/lexer/handwritten_lexer.cpp
         src/lexer/spirit_lexer.cpp
         src/parser/recursive_descent_parser.cpp
+        src/checker/checker.cpp
         src/translator/translator.cpp
         src/optimizer/optimizer.cpp
         src/reg_allocator/reg_allocator.cpp

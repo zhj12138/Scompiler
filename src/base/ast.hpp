@@ -286,7 +286,7 @@ class Declaration {
       : var_(std::move(var)), init_exp_(std::move(init_exp)) {}
   ~Declaration() = default;
   VariablePtr &var() { return var_; }
-  ExpressionPtr &init_exp() { return init_exp_;}
+  ExpressionPtr &init_exp() { return init_exp_; }
  private:
   VariablePtr var_;
   ExpressionPtr init_exp_;  // nullptr for not initialized
@@ -511,15 +511,13 @@ using FunctionPtr = std::shared_ptr<Function>;
 
 class Program {
  public:
-  Program(std::vector<FunctionPtr> functions, std::vector<DeclarationPtr> declarations)
-      : function_vec_(std::move(functions)), declaration_vec_(std::move(declarations)) {}
+  using value_type = std::variant<FunctionPtr, DeclarationPtr>;
+  explicit Program(std::vector<value_type> vec) : func_decl_vec_(std::move(vec)) {}
   ~Program() = default;
 
-  std::vector<FunctionPtr> &functions() { return function_vec_; }
-  std::vector<DeclarationPtr> &declarations() { return declaration_vec_; }
+  std::vector<value_type> &func_decl_vec() { return func_decl_vec_; }
  private:
-  std::vector<FunctionPtr> function_vec_;
-  std::vector<DeclarationPtr> declaration_vec_;
+  std::vector<value_type> func_decl_vec_;
 };
 using ProgramPtr = std::shared_ptr<Program>;
 
