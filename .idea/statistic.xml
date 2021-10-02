@@ -7,6 +7,7 @@
         <option value="$PROJECT_DIR$/.idea" />
         <option value="$PROJECT_DIR$/cmake-build-debug" />
         <option value="$PROJECT_DIR$/test" />
+        <option value="$PROJECT_DIR$/src/third_party" />
       </list>
     </option>
   </component>
