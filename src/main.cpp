@@ -1,6 +1,10 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 #include "checker/checker.hpp"
+#include "translator/translator.hpp"
+#include "optimizer/optimizer.hpp"
+// no reg alloc now
+#include "asm_generator/asm_generator.hpp"
 
 #include "config.hpp"
 
@@ -21,4 +25,19 @@ int main(int argc, char *argv[]) {
     ofs << program << std::endl;
   }
   check(program);
+  IRBuilderPtr ir_builder = translate(program);
+  if (config.print_ir) {
+    std::ofstream ofs(config.ir_file);
+    ofs << ir_builder << std::endl;
+  }
+  if (config.optimize_level > 0) {
+    optimize(ir_builder); // do nothing now
+  }
+  // maybe print optimized ir here?
+  std::vector<std::string> asm_vec = generate(ir_builder);
+  std::ofstream ofs(config.output_file);
+  for (auto &code : asm_vec) {
+    ofs << code << "\n";
+  }
+  ofs << std::endl;
 }

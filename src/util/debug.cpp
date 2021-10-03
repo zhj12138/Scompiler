@@ -641,3 +641,50 @@ std::ostream &operator<<(std::ostream &os, ProgramPtr &program) {
   printer.visit(program);
   return os;
 }
+
+std::ostream &operator<<(std::ostream &os, IRVar &var) {
+  if (var.is_global()) {
+    os << var.name();
+  } else {
+    os << "%" << var.num();
+  }
+  return os;
+}
+std::ostream &operator<<(std::ostream &os, IRAddr &addr) {
+  if (addr.is_imm()) {
+    os << addr.imm();
+  } else if (addr.is_var()) {
+    os << addr.var();
+  } else {
+    os << addr.name();
+  }
+  return os;
+}
+std::string to_string(IRCode::Op op) {
+  switch (op) {
+    case IRCode::Op::FUNCBEG: return "FUNCBEG";
+    case IRCode::Op::FUNCEND: return "FUNCEND";
+    case IRCode::Op::RET: return "RET";
+    case IRCode::Op::MOV: return "MOV";
+  }
+  return "";
+}
+std::ostream &operator<<(std::ostream &os, IRCode &code) {
+  os << to_string(code.op());
+  if (code.a0()) {
+    os << "\t" << *(code.a0());
+  }
+  if (code.a1()) {
+    os << "\t" << *(code.a1());
+  }
+  if (code.a2()) {
+    os << "\t" << *(code.a2());
+  }
+  return os;
+}
+std::ostream &operator<<(std::ostream &os, IRBuilderPtr &ir_builder) {
+  for (auto &ir : ir_builder->ircode_list()) {
+    os << *ir << "\n";
+  }
+  return os;
+}

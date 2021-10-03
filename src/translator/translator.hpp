@@ -2,11 +2,12 @@
 #define SCOMPILER_SRC_TRANSLATOR_TRANSLATOR_HPP_
 
 #include "visitor.hpp"
+#include "symbol_table.hpp"
 #include "ir.hpp"
 
 class Translator : DetailedASTVisitor {
  public:
-  Translator() = default;
+  Translator() : ir_builder_(std::make_shared<IRBuilder>()) {}
   ~Translator() = default;
   IRBuilderPtr translate(ProgramPtr &program);
  private:
@@ -45,9 +46,11 @@ class Translator : DetailedASTVisitor {
   void visit(ArrayPtr &array) override;
 
   IRBuilderPtr ir_builder_;
+  SymbolTable symbol_table_;
+  IRVar tmp_var_;
 };
 
-IRBuilderPtr translate(ProgramPtr &program) {
+inline IRBuilderPtr translate(ProgramPtr &program) {
   Translator translator;
   return translator.translate(program);
 }

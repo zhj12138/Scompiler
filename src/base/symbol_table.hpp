@@ -75,14 +75,14 @@ class VariableTable {
   void add(const VariablePtr &variable) {
     variable_map_.emplace(variable->name(), variable);
   }
-  VariablePtr lookup(const std::string &name) {
+  std::pair<VariablePtr, bool> lookup(const std::string &name) {
     if (variable_map_.count(name)) {
-      return variable_map_[name];
+      return {variable_map_[name], father_ == nullptr};
     }
     if (father_) {
       return father_->lookup(name);
     }
-    return nullptr;
+    return {nullptr, false};
   }
   bool can_use(const std::string &name) {
     if (variable_map_.count(name)) return false;
@@ -95,6 +95,20 @@ class VariableTable {
 };
 using VariableTablePtr = std::shared_ptr<VariableTable>;
 
+class SimpleAllocator {
+ public:
+  SimpleAllocator() = default;
+  ~SimpleAllocator() = default;
+
+  void enter_function() { var_num_ = 0; } // 进入一个新的函数，就重新计数
+
+  int alloc_var() { return var_num_++; }
+  int alloc_label() { return label_num_++; }
+ private:
+  int var_num_{0};
+  int label_num_{0};
+};
+
 class SymbolTable {
  public:
   SymbolTable() : function_table_(std::make_shared<FunctionTable>()),
@@ -104,6 +118,7 @@ class SymbolTable {
   void enter() {
     variable_table_ = std::make_shared<VariableTable>(variable_table_);
     ++scope_depth_;
+    if (scope_depth_ == 1) allocator_.enter_function();
   }
   void leave() {
     variable_table_ = variable_table_->father();
@@ -127,7 +142,7 @@ class SymbolTable {
   void add_function_declaration(const FunctionEntryPtr &function) {
     function_table_->declare(function);
   }
-  VariablePtr lookup_variable(const std::string &name) {
+  std::pair<VariablePtr, bool> lookup_variable(const std::string &name) {
     return variable_table_->lookup(name);
   }
   FunctionEntryPtr lookup_function(const std::string &name) {
@@ -148,9 +163,12 @@ class SymbolTable {
     return function_table_->is_defined(name);
   }
   [[nodiscard]] bool in_function_top_level() const { return scope_depth_ == 2; }
+  int alloc_var() { return allocator_.alloc_var(); };
+  int alloc_label() { return allocator_.alloc_label(); }
  private:
   FunctionTablePtr function_table_;
   VariableTablePtr variable_table_;
+  SimpleAllocator allocator_;
   int scope_depth_{0};
   int loop_depth_{0};
 };

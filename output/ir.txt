@@ -1,0 +1,5 @@
+FUNCBEG	main
+MOV	%0	0
+RET	%0
+FUNCEND
+

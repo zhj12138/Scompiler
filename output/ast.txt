@@ -1,27 +1,8 @@
 program
-    └── function(func)
+    └── function(main)
         ├── type: int
         ├── parameterList
-        │    └── variable(name: a, type: int)
         └── compoundStatement
-            ├── blockItem
-            │    └── declaration
-            │        └── variable(name: b, type: int[5][7][9])
-            ├── blockItem
-            │    └── declaration
-            │        ├── variable(name: c, type: int)
-            │        └── expression
-            │            └── assignment
-            │                └── conditional
-            │                    └── logicalOr
-            │                        └── logicalAnd
-            │                            └── equality
-            │                                └── relational
-            │                                    └── additive
-            │                                        └── multiplicative
-            │                                            └── unary
-            │                                                └── postfix
-            │                                                    └── primary(Identifier: b)
             └── blockItem
                 └── statement
                     └── returnStatement

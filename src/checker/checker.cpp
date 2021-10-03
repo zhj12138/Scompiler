@@ -184,7 +184,7 @@ void Checker::visit(PrimaryPtr &primary) {
   } else if (std::holds_alternative<int>(primary->value())) {
   } else if (std::holds_alternative<std::string>(primary->value())) {
     auto name = std::get<std::string>(primary->value());
-    auto result = symbol_table_.lookup_variable(name);
+    auto [result, is_global] = symbol_table_.lookup_variable(name);
     if (!result) {
       throw check_error("use unknown variable: " + name);
     }
@@ -278,7 +278,7 @@ void Checker::visit(ArrayPtr &array) {
       throw check_error("array name should be string");
     }
     auto name = std::get<std::string>(primary->value());
-    auto result = symbol_table_.lookup_variable(name);
+    auto [result, is_global] = symbol_table_.lookup_variable(name);
     if (!result) {  // 其实已经检查过了
       throw check_error("use unknown variable: " + name);
     }
