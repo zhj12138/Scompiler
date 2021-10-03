@@ -1,3 +1,5 @@
+int func(int);
+int func(int);
 int func(int a) {
   // valid numbers
   int b = 0x7A8F;

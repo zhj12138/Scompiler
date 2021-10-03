@@ -485,14 +485,14 @@ class ASTPrinter : public DetailedASTVisitor {
     if (if_statement->else_stmt()) {  // has else branch
       is_end_ = false;
       prefix_ = stored_prefix;
-      visit(if_statement->cond_exp());
+      visit(if_statement->if_stmt());
       is_end_ = true;
       prefix_ = stored_prefix;
       visit(if_statement->else_stmt());
     } else {
       is_end_ = true;
       prefix_ = stored_prefix;
-      visit(if_statement->cond_exp());
+      visit(if_statement->if_stmt());
     }
   }
   void visit(ForExpStatementPtr &for_exp_statement) override {

@@ -8,4 +8,9 @@ class lex_error : public std::logic_error {
   explicit lex_error(const std::string &str) : std::logic_error(str) {}
 };
 
+class check_error : public std::logic_error {
+ public:
+  explicit check_error(const std::string &str) : std::logic_error(str) {}
+};
+
 #endif //SCOMPILER_SRC_BASE_ERROR_HPP_

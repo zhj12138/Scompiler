@@ -17,6 +17,16 @@ class VariableType {
   [[nodiscard]] bool is_array() const { return !dimension_vec_.empty(); }
   SupportType &type() { return type_; }
   std::vector<int> &dimension_vec() { return dimension_vec_; };
+
+  bool operator==(const VariableType &other) const {
+    if (type_ != other.type_) return false;
+    if (dimension_vec_.size() != other.dimension_vec_.size()) return false;
+    return std::equal(dimension_vec_.begin(), dimension_vec_.end(),
+                      other.dimension_vec_.begin(), other.dimension_vec_.end(),
+                      [](int a, int b) { return a == b; });
+  }
+  bool operator!=(const VariableType &other) const { return !(*this == other); }
+
  private:
   SupportType type_;
   std::vector<int> dimension_vec_;

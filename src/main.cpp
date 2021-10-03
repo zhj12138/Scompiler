@@ -1,5 +1,6 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
+#include "checker/checker.hpp"
 
 #include "config.hpp"
 
@@ -19,4 +20,5 @@ int main(int argc, char *argv[]) {
     std::ofstream ofs(config.ast_file);
     ofs << program << std::endl;
   }
+  check(program);
 }

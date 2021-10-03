@@ -9,7 +9,7 @@ class Checker : DetailedASTVisitor {
   Checker() = default;
   ~Checker() = default;
 
-  void check();
+  void check(ProgramPtr &program);
  private:
   void visit(ProgramPtr &program) override;
   void visit(FunctionPtr &function) override;
@@ -47,5 +47,10 @@ class Checker : DetailedASTVisitor {
 
   SymbolTable symbol_table_;
 };
+
+inline void check(ProgramPtr &program) {
+  Checker checker;
+  checker.check(program);
+}
 
 #endif //SCOMPILER_SRC_CHECKER_CHECKER_HPP_

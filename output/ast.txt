@@ -6,9 +6,6 @@ program
         └── compoundStatement
             ├── blockItem
             │    └── declaration
-            │        └── variable(name: a, type: int[3][4])
-            ├── blockItem
-            │    └── declaration
             │        └── variable(name: b, type: int[5][7][9])
             ├── blockItem
             │    └── declaration
@@ -24,7 +21,7 @@ program
             │                                        └── multiplicative
             │                                            └── unary
             │                                                └── postfix
-            │                                                    └── primary(Interger: 10)
+            │                                                    └── primary(Identifier: b)
             └── blockItem
                 └── statement
                     └── returnStatement
