@@ -1,4 +1,4 @@
-FUNCBEG	main
+FUNCBEG	func
 MOV	%0	0
 RET	%0
 FUNCEND

@@ -15,7 +15,7 @@ class ASMGenerator {
 
 };
 
-std::vector<std::string> generate(IRBuilderPtr &ir_builder) {
+inline std::vector<std::string> generate(IRBuilderPtr &ir_builder) {
   ASMGenerator generator;
   return generator.generate(ir_builder);
 }

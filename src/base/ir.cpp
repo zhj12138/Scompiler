@@ -17,6 +17,22 @@ IRBuilder::iterator IRBuilder::new_func_end(IRBuilder::iterator pos) {
                                                            nullptr, nullptr, nullptr));
 }
 
+IRBuilder::iterator IRBuilder::new_ret(const IRVar &var0) {
+  return new_ret(ircode_list_.end(), var0);
+}
+IRBuilder::iterator IRBuilder::new_ret(IRBuilder::iterator pos, const IRVar &var0) {
+  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::RET,
+                                                           std::make_shared<IRAddr>(var0),
+                                                           nullptr, nullptr));
+}
+IRBuilder::iterator IRBuilder::new_ret(int imm) {
+  return new_ret(ircode_list_.end(), imm);
+}
+IRBuilder::iterator IRBuilder::new_ret(IRBuilder::iterator pos, int imm) {
+  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::RET,
+                                                           std::make_shared<IRAddr>(imm),
+                                                           nullptr, nullptr));
+}
 IRBuilder::iterator IRBuilder::new_mov(const IRVar &var0, const IRVar &var1) {
   return new_mov(ircode_list_.end(), var0, var1);
 }
@@ -35,19 +51,30 @@ IRBuilder::iterator IRBuilder::new_mov(IRBuilder::iterator pos, const IRVar &var
                                                            std::make_shared<IRAddr>(imm),
                                                            nullptr));
 }
-IRBuilder::iterator IRBuilder::new_ret(const IRVar &var0) {
-  return new_ret(ircode_list_.end(), var0);
+IRBuilder::iterator IRBuilder::new_neg(const IRVar &var0, const IRVar &var1) {
+  return new_neg(ircode_list_.end(), var0, var1);
 }
-IRBuilder::iterator IRBuilder::new_ret(IRBuilder::iterator pos, const IRVar &var0) {
-  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::RET,
+IRBuilder::iterator IRBuilder::new_neg(IRBuilder::iterator pos, const IRVar &var0, const IRVar &var1) {
+  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::NEG,
                                                            std::make_shared<IRAddr>(var0),
-                                                           nullptr, nullptr));
+                                                           std::make_shared<IRAddr>(var1),
+                                                           nullptr));
 }
-IRBuilder::iterator IRBuilder::new_ret(int imm) {
-  return new_ret(ircode_list_.end(), imm);
+IRBuilder::iterator IRBuilder::new_not(const IRVar &var0, const IRVar &var1) {
+  return new_not(ircode_list_.end(), var0, var1);
 }
-IRBuilder::iterator IRBuilder::new_ret(IRBuilder::iterator pos, int imm) {
-  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::RET,
-                                                           std::make_shared<IRAddr>(imm),
-                                                           nullptr, nullptr));
+IRBuilder::iterator IRBuilder::new_not(IRBuilder::iterator pos, const IRVar &var0, const IRVar &var1) {
+  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::NOT,
+                                                           std::make_shared<IRAddr>(var0),
+                                                           std::make_shared<IRAddr>(var1),
+                                                           nullptr));
+}
+IRBuilder::iterator IRBuilder::new_lnot(const IRVar &var0, const IRVar &var1) {
+  return new_lnot(ircode_list_.end(), var0, var1);
+}
+IRBuilder::iterator IRBuilder::new_lnot(IRBuilder::iterator pos, const IRVar &var0, const IRVar &var1) {
+  return ircode_list_.insert(pos, std::make_shared<IRCode>(IRCode::Op::LNOT,
+                                                           std::make_shared<IRAddr>(var0),
+                                                           std::make_shared<IRAddr>(var1),
+                                                           nullptr));
 }

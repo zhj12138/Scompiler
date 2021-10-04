@@ -11,7 +11,7 @@ class Optimizer {
   void optimize(IRBuilderPtr &ir_builder);
 };
 
-void optimize(IRBuilderPtr &ir_builder) {
+inline void optimize(IRBuilderPtr &ir_builder) {
   Optimizer optimizer;
   optimizer.optimize(ir_builder);
 }

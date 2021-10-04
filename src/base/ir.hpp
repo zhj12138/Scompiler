@@ -36,11 +36,14 @@ class IRAddr {
 using IRAddrPtr = std::shared_ptr<IRAddr>;
 
 // str代表字符串类型，imm代表数字类型，var代表变量类型, null代表不使用
-// Op       a0      a1      a2
-// FUNCBEG  str     null    null
-// FUNCEND  null    null    null
-// MOV      var     var|imm null
-// RET      var|imm null    null
+// Op       a0      a1      a2      作用
+// FUNCBEG  str     null    null    函数开始
+// FUNCEND  null    null    null    函数结束
+// RET      var|imm null    null    返回a0
+// MOV      var     var|imm null    a0 = a1
+// NEG      var     var     null    a0 = -a1
+// NOT      var     var     null    a0 = ~a1
+// LNOT     var     var     null    a0 = !a1
 class IRCode {
  public:
   enum class Op {
@@ -48,6 +51,9 @@ class IRCode {
     FUNCEND,
     RET,
     MOV,
+    NEG,
+    NOT,
+    LNOT,
   };
   IRCode(Op op, IRAddrPtr a0, IRAddrPtr a1, IRAddrPtr a2)
       : op_(op), a0_(std::move(a0)), a1_(std::move(a1)), a2_(std::move(a2)) {}
@@ -78,14 +84,20 @@ class IRBuilder {
   iterator new_func_beg(iterator pos, const std::string &func_name);
   iterator new_func_end();
   iterator new_func_end(iterator pos);
-  iterator new_mov(const IRVar &var0, const IRVar &var1);
-  iterator new_mov(iterator pos, const IRVar &var0, const IRVar &var1);
-  iterator new_mov(const IRVar &var0, int imm);
-  iterator new_mov(iterator pos, const IRVar &var0, int imm);
   iterator new_ret(const IRVar &var0);
   iterator new_ret(iterator pos, const IRVar &var0);
   iterator new_ret(int imm);
   iterator new_ret(iterator pos, int imm);
+  iterator new_mov(const IRVar &var0, const IRVar &var1);
+  iterator new_mov(iterator pos, const IRVar &var0, const IRVar &var1);
+  iterator new_mov(const IRVar &var0, int imm);
+  iterator new_mov(iterator pos, const IRVar &var0, int imm);
+  iterator new_neg(const IRVar &var0, const IRVar &var1);
+  iterator new_neg(iterator pos, const IRVar &var0, const IRVar &var1);
+  iterator new_not(const IRVar &var0, const IRVar &var1);
+  iterator new_not(iterator pos, const IRVar &var0, const IRVar &var1);
+  iterator new_lnot(const IRVar &var0, const IRVar &var1);
+  iterator new_lnot(iterator pos, const IRVar &var0, const IRVar &var1);
 
   std::list<IRCodePtr> &ircode_list() { return ircode_list_; }
  private:
