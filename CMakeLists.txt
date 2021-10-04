@@ -13,7 +13,6 @@ add_executable(Scompiler
         src/util/config.cpp
         src/base/token.cpp
         src/base/ast.cpp
-        src/base/ir.cpp
         src/util/debug.cpp
         src/lexer/handwritten_lexer.cpp
         src/lexer/spirit_lexer.cpp

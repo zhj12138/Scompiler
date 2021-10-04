@@ -48,6 +48,7 @@ class Translator : DetailedASTVisitor {
   IRBuilderPtr ir_builder_;
   SymbolTable symbol_table_;
   IRVar tmp_var_;
+  // 之所以保存IRVar而不是保存IRAddrPtr，是因为我觉得一个变量在不同语句中的出现不应该共享相同的地址，应该每次重新分配
 };
 
 inline IRBuilderPtr translate(ProgramPtr &program) {

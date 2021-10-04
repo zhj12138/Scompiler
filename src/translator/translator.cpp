@@ -20,10 +20,10 @@ void Translator::visit(FunctionPtr &function) {
   auto new_function_entry = std::make_shared<FunctionEntry>(function);
   if (function->compound_statement()) { // 函数定义
     symbol_table_.add_function_definition(new_function_entry);
-    ir_builder_->new_func_beg(function->name());
+    ir_builder_->new_ir(IROp::FUNCBEG, new_ir_addr(function->name()));
     visit(function->parameter_list());
     visit(function->compound_statement());
-    ir_builder_->new_func_end();
+    ir_builder_->new_ir(IROp::FUNCEND);
   } else {  // 函数声明
     symbol_table_.add_function_declaration(new_function_entry);
   }
@@ -107,44 +107,94 @@ void Translator::visit(ConditionalPtr &conditional) {
 void Translator::visit(LogicalOrPtr &logical_or) {
   if (logical_or->left()) {
     visit(logical_or->left());
+    auto right_var1 = tmp_var_;
+    visit(logical_or->right());
+    auto right_var2 = tmp_var_;
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(IROp::LOR, new_ir_addr(tmp_var_), new_ir_addr(right_var1), new_ir_addr(right_var2));
+  } else {
+    visit(logical_or->right());
   }
-  visit(logical_or->right());
 }
 void Translator::visit(LogicalAndPtr &logical_and) {
   if (logical_and->left()) {
     visit(logical_and->left());
+    auto right_var1 = tmp_var_;
+    visit(logical_and->right());
+    auto right_var2 = tmp_var_;
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(IROp::LAND, new_ir_addr(tmp_var_), new_ir_addr(right_var1), new_ir_addr(right_var2));
+  } else {
+    visit(logical_and->right());
   }
-  visit(logical_and->right());
 }
 void Translator::visit(EqualityPtr &equality) {
   if (equality->left()) {
     visit(equality->left());
+    auto right_var1 = tmp_var_;
+    visit(equality->right());
+    auto right_var2 = tmp_var_;
+    ir_builder_->new_ir(to_ir_op(equality->op()),
+                        new_ir_addr(tmp_var_),
+                        new_ir_addr(right_var1),
+                        new_ir_addr(right_var2));
+  } else {
+    visit(equality->right());
   }
-  visit(equality->right());
 }
 void Translator::visit(RelationalPtr &relational) {
   if (relational->left()) {
     visit(relational->left());
+    auto right_var1 = tmp_var_;
+    visit(relational->right());
+    auto right_var2 = tmp_var_;
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(to_ir_op(relational->op()),
+                        new_ir_addr(tmp_var_),
+                        new_ir_addr(right_var1),
+                        new_ir_addr(right_var2));
+  } else {
+    visit(relational->right());
   }
-  visit(relational->right());
 }
 void Translator::visit(AdditivePtr &additive) {
   if (additive->left()) {
     visit(additive->left());
+    auto right_var1 = tmp_var_;
+    visit(additive->right());
+    auto right_var2 = tmp_var_;
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(to_ir_op(additive->op()),
+                        new_ir_addr(tmp_var_),
+                        new_ir_addr(right_var1),
+                        new_ir_addr(right_var2));
+  } else {
+    visit(additive->right());
   }
-  visit(additive->right());
 }
 void Translator::visit(MultiplicativePtr &multiplicative) {
   if (multiplicative->left()) {
     visit(multiplicative->left());
+    auto right_var1 = tmp_var_;
+    visit(multiplicative->right());
+    auto right_var2 = tmp_var_;
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(to_ir_op(multiplicative->op()),
+                        new_ir_addr(tmp_var_),
+                        new_ir_addr(right_var1),
+                        new_ir_addr(right_var2));
+  } else {
+    visit(multiplicative->right());
   }
-  visit(multiplicative->right());
 }
 void Translator::visit(UnaryPtr &unary) {
   if (std::holds_alternative<PostfixPtr>(unary->value())) {
     visit(std::get<PostfixPtr>(unary->value()));
   } else if (std::holds_alternative<UnaryPtr>(unary->value())) {
     visit(std::get<UnaryPtr>(unary->value()));
+    auto right_var = tmp_var_;
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(to_ir_op(unary->op()), new_ir_addr(tmp_var_), new_ir_addr(right_var));
   } else { assert(false); }
 }
 void Translator::visit(PostfixPtr &postfix) {
@@ -162,7 +212,7 @@ void Translator::visit(PrimaryPtr &primary) {
   } else if (std::holds_alternative<int>(primary->value())) {
     int imm = std::get<int>(primary->value());
     tmp_var_ = IRVar(symbol_table_.alloc_var());
-    ir_builder_->new_mov(tmp_var_, imm);
+    ir_builder_->new_ir(IROp::MOV, new_ir_addr(tmp_var_), new_ir_addr(imm));
   } else if (std::holds_alternative<std::string>(primary->value())) {
     auto name = std::get<std::string>(primary->value());
     auto result = symbol_table_.lookup_variable(name);
@@ -170,7 +220,7 @@ void Translator::visit(PrimaryPtr &primary) {
 }
 void Translator::visit(ReturnStatementPtr &return_statement) {
   visit(return_statement->exp());
-  ir_builder_->new_ret(tmp_var_);
+  ir_builder_->new_ir(IROp::RET, new_ir_addr(tmp_var_));
 }
 void Translator::visit(ExpStatementPtr &exp_statement) {
   if (exp_statement->exp()) {

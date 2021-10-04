@@ -660,12 +660,12 @@ std::ostream &operator<<(std::ostream &os, IRAddr &addr) {
   }
   return os;
 }
-std::string to_string(IRCode::Op op) {
+std::string to_string(IROp op) {
   switch (op) {
-    case IRCode::Op::FUNCBEG: return "FUNCBEG";
-    case IRCode::Op::FUNCEND: return "FUNCEND";
-    case IRCode::Op::RET: return "RET";
-    case IRCode::Op::MOV: return "MOV";
+    case IROp::FUNCBEG: return "FUNCBEG";
+    case IROp::FUNCEND: return "FUNCEND";
+    case IROp::RET: return "RET";
+    case IROp::MOV: return "MOV";
   }
   return "";
 }
