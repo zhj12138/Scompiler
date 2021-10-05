@@ -8,13 +8,13 @@ std::vector<std::string> ASMGenerator::generate(IRBuilderPtr &ir_builder) {
   std::vector<std::string> asmcode_vec;
   for (auto &ir : ir_builder->ircode_list()) {
     switch (ir->op()) {
-      case IRCode::Op::FUNCBEG: {
+      case IROp::FUNBEG: {
         asmcode_vec.push_back(build_string("\t.text"));
         asmcode_vec.push_back(build_string("\t.global ", ir->a0()->name()));
         break;
       }
-      case IRCode::Op::FUNCEND: break;
-      case IRCode::Op::RET: {
+      case IROp::FUNEND: break;
+      case IROp::RET: {
         if (ir->a0()->is_var()) {
           // 暂时不处理
         } else if (ir->a0()->is_imm()) {
@@ -22,16 +22,16 @@ std::vector<std::string> ASMGenerator::generate(IRBuilderPtr &ir_builder) {
         } else { assert(false); }
         break;
       }
-      case IRCode::Op::MOV: {
+      case IROp::MOV: {
         break;
       }
-      case IRCode::Op::NEG: {
+      case IROp::NEG: {
         break;
       }
-      case IRCode::Op::NOT: {
+      case IROp::NOT: {
         break;
       }
-      case IRCode::Op::LNOT: {
+      case IROp::LNOT: {
         break;
       }
     }

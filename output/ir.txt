@@ -1,5 +1,13 @@
-FUNCBEG	func
-MOV	%0	0
-RET	%0
-FUNCEND
+FUNBEG  func
+ADD     %2    %0    %1
+RET     %2
+FUNEND  
+FUNBEG  main
+MOV     %0    1
+PARAM   %0
+MOV     %1    2
+PARAM   %1
+CALL    %2    func
+RET     %2
+FUNEND  
 

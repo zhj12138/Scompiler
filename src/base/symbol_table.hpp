@@ -3,6 +3,7 @@
 
 #include "variable.hpp"
 #include "ast.hpp"
+#include "ir.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -109,6 +110,29 @@ class SimpleAllocator {
   int label_num_{0};
 };
 
+class LoopTable {
+  using LoopTablePtr = std::shared_ptr<LoopTable>;
+ public:
+  LoopTable(LoopTablePtr father, int begin_label, int continue_label, int break_label)
+      : father_(std::move(father)),
+        begin_label_(begin_label),
+        continue_label_(continue_label),
+        break_label_(break_label) {}
+  ~LoopTable() = default;
+
+  [[nodiscard]] int begin_label() const { return begin_label_; }
+  [[nodiscard]] int continue_label() const { return continue_label_; }
+  [[nodiscard]] int break_label() const { return break_label_; }
+  [[nodiscard]] LoopTablePtr father() const { return father_; }
+
+ private:
+  int begin_label_{-1};
+  int continue_label_{-1};
+  int break_label_{-1};
+  LoopTablePtr father_;
+};
+using LoopTablePtr = std::shared_ptr<LoopTable>;
+
 class SymbolTable {
  public:
   SymbolTable() : function_table_(std::make_shared<FunctionTable>()),
@@ -126,13 +150,20 @@ class SymbolTable {
   }
   void enter_loop() {
     enter();
-    ++loop_depth_;
+    int begin_label = alloc_label();
+    int continue_lable = alloc_label();
+    int break_label = alloc_label();
+    loop_table_ = std::make_shared<LoopTable>(loop_table_, begin_label, continue_lable, break_label);
   }
   void leave_loop() {
     leave();
-    --loop_depth_;
+    assert(loop_table_ != nullptr); // 其实没必要检查
+    loop_table_ = loop_table_->father();
   }
-  [[nodiscard]] bool in_loop() const { return loop_depth_ > 0; }
+  [[nodiscard]] bool in_loop() const { return loop_table_ != nullptr; }
+  int loop_begin_label() { return loop_table_->begin_label(); };  // 不检查loop_table_是否为空
+  int loop_continue_label() { return loop_table_->continue_label(); };
+  int loop_break_label() { return loop_table_->break_label(); };
   void add_variable(const VariablePtr &variable) {
     variable_table_->add(variable);
   }
@@ -144,6 +175,20 @@ class SymbolTable {
   }
   std::pair<VariablePtr, bool> lookup_variable(const std::string &name) {
     return variable_table_->lookup(name);
+  }
+  IRVar lookup_ir_var(const std::string &name) {
+    auto[variable, is_global] = lookup_variable(name); // 默认是可以查到的，因为checker已经确保这一点
+    if (variable->allocated()) {  // 已经分配了IR变量
+      return variable->ir_var();
+    }
+    IRVar new_ir_var;
+    if (is_global) {
+      new_ir_var = IRVar(name);
+    } else {
+      new_ir_var = IRVar(alloc_var());
+    }
+    variable->alloc(new_ir_var);
+    return new_ir_var;
   }
   FunctionEntryPtr lookup_function(const std::string &name) {
     return function_table_->lookup(name);
@@ -168,9 +213,9 @@ class SymbolTable {
  private:
   FunctionTablePtr function_table_;
   VariableTablePtr variable_table_;
+  LoopTablePtr loop_table_;
   SimpleAllocator allocator_;
   int scope_depth_{0};
-  int loop_depth_{0};
 };
 
 #endif //SCOMPILER_SRC_BASE_SYMBOL_TABLE_HPP_

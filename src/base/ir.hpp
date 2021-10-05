@@ -9,17 +9,6 @@
 #include <utility>
 #include <variant>
 
-class IRVar {
- public:
-  using value_type = std::variant<int, std::string>;
-  IRVar() = default;
-  explicit IRVar(value_type value) : value_(std::move(value)) {}
-  [[nodiscard]] bool is_global() const { return std::holds_alternative<std::string>(value_); }
-  int &num() { return std::get<int>(value_); }  // 局部变量用数字表示
-  std::string &name() { return std::get<std::string>(value_); } // 全局变量用变量名表示
- private:
-  value_type value_;
-};
 
 class IRAddr {
  public:
@@ -44,8 +33,9 @@ inline IRAddrPtr new_ir_addr(const IRAddr::value_type &v) {
 
 // str代表字符串类型，imm代表数字类型，var代表变量类型, null代表不使用
 // Op       a0      a1      a2      作用
-// FUNCBEG  str     null    null    函数开始
-// FUNCEND  null    null    null    函数结束
+// FUNBEG   str     null    null    函数a0开始
+// FUNEND   null    null    null    函数结束
+// LABEL    imm     null    null    根据a0生成一个唯一的标签
 // RET      var|imm null    null    返回a0
 // MOV      var     var|imm null    a0 = a1
 // NEG      var     var     null    a0 = -a1
@@ -64,9 +54,16 @@ inline IRAddrPtr new_ir_addr(const IRAddr::value_type &v) {
 // NE       var     var|imm var|imm a0 = (a1 != a2)
 // LAND     var     var|imm var|imm a0 = (a1 && a2)
 // LOR      var     var|imm var|imm a0 = (a1 || a2)
+// JMP      imm     null    null    跳转到a0对应的标签
+// BEQZ     var|imm imm     null    如果a0 == 0,则跳转到a1对应的标签
+// PARAM    var     null    null    将a0作为参数进行传递
+// CALL     var     str     null    调用函数a1，将返回值存放在a0中
+// LA       var     str     null    将全局变量a1的地址加载到a0中
+// LOAD     var     var     var|imm 以a1为基地址，a2为偏移地址对应的值加载到a0中
 enum class IROp {
-  FUNCBEG,
-  FUNCEND,
+  FUNBEG,
+  FUNEND,
+  LABEL,
   RET,
   MOV,
   NEG,
@@ -85,6 +82,12 @@ enum class IROp {
   NE,
   LAND,
   LOR,
+  JMP,
+  BEQZ,
+  PARAM,
+  CALL,
+  LA,
+  LOAD,
 };
 class IRCode {
  public:
@@ -134,7 +137,7 @@ class IRBuilder {
 using IRBuilderPtr = std::shared_ptr<IRBuilder>;
 
 // some convert functions
-IROp to_ir_op(Unary::Op op) {
+inline IROp to_ir_op(Unary::Op op) {
   switch (op) {
     case Unary::Op::Sub: return IROp::NEG;
     case Unary::Op::Not: return IROp::NOT;
@@ -143,7 +146,7 @@ IROp to_ir_op(Unary::Op op) {
   assert(false);
 }
 
-IROp to_ir_op(Multiplicative::Op op) {
+inline IROp to_ir_op(Multiplicative::Op op) {
   switch (op) {
     case Multiplicative::Op::Times: return IROp::MUL;
     case Multiplicative::Op::Divide: return IROp::DIV;
@@ -152,7 +155,7 @@ IROp to_ir_op(Multiplicative::Op op) {
   assert(false);
 }
 
-IROp to_ir_op(Additive::Op op) {
+inline IROp to_ir_op(Additive::Op op) {
   switch (op) {
     case Additive::Op::Add: return IROp::ADD;
     case Additive::Op::Sub: return IROp::SUB;
@@ -160,7 +163,7 @@ IROp to_ir_op(Additive::Op op) {
   assert(false);
 }
 
-IROp to_ir_op(Relational::Op op) {
+inline IROp to_ir_op(Relational::Op op) {
   switch (op) {
     case Relational::Op::Less: return IROp::LT;
     case Relational::Op::Greater: return IROp::GT;
@@ -170,7 +173,7 @@ IROp to_ir_op(Relational::Op op) {
   assert(false);
 }
 
-IROp to_ir_op(Equality::Op op) {
+inline IROp to_ir_op(Equality::Op op) {
   switch (op) {
     case Equality::Op::Equal: return IROp::EQ;
     case Equality::Op::Nequal: return IROp::NE;

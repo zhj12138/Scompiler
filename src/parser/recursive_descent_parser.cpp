@@ -258,9 +258,11 @@ void RecursiveDescentParser::visit(ExpressionListPtr &expression_list) {
   while (true) {
     ExpressionPtr expression;
     visit(expression);
-    if (!token_stream_.is(TokenType::Comma)) break; // end
-    token_stream_.advance();
+    expression_vec.push_back(expression);
+    if (token_stream_.is(TokenType::Rparen)) break; // end
+    token_stream_.consume(TokenType::Comma);
   }
+  expression_list = std::make_shared<ExpressionList>(expression_vec);
 }
 
 void RecursiveDescentParser::visit(ExpressionPtr &expression) {

@@ -3,6 +3,7 @@
 #include "visitor.hpp"
 
 #include <variant>
+#include <iomanip>
 
 std::string to_string(const TokenType &pt) {
   switch (pt) {
@@ -662,23 +663,44 @@ std::ostream &operator<<(std::ostream &os, IRAddr &addr) {
 }
 std::string to_string(IROp op) {
   switch (op) {
-    case IROp::FUNCBEG: return "FUNCBEG";
-    case IROp::FUNCEND: return "FUNCEND";
+    case IROp::FUNBEG: return "FUNBEG";
+    case IROp::FUNEND: return "FUNEND";
+    case IROp::LABEL: return "LABEL";
     case IROp::RET: return "RET";
     case IROp::MOV: return "MOV";
+    case IROp::NEG: return "NEG";
+    case IROp::NOT: return "NOT";
+    case IROp::LNOT: return "LNOT";
+    case IROp::MUL: return "MUL";
+    case IROp::DIV: return "DIV";
+    case IROp::REM: return "REM";
+    case IROp::ADD: return "ADD";
+    case IROp::SUB: return "SUB";
+    case IROp::LT: return "LT";
+    case IROp::GT: return "GT";
+    case IROp::LE: return "LE";
+    case IROp::GE: return "GE";
+    case IROp::EQ: return "EQ";
+    case IROp::NE: return "NE";
+    case IROp::LAND: return "LAND";
+    case IROp::LOR: return "LOR";
+    case IROp::JMP: return "JMP";
+    case IROp::BEQZ: return "BEQZ";
+    case IROp::PARAM: return "PARAM";
+    case IROp::CALL: return "CALL";
   }
-  return "";
+  assert(false);
 }
 std::ostream &operator<<(std::ostream &os, IRCode &code) {
-  os << to_string(code.op());
+  os << std::setw(8) << std::left << to_string(code.op());
   if (code.a0()) {
-    os << "\t" << *(code.a0());
+    os << *(code.a0());
   }
   if (code.a1()) {
-    os << "\t" << *(code.a1());
+    os << "    " << *(code.a1());
   }
   if (code.a2()) {
-    os << "\t" << *(code.a2());
+    os << "    " << *(code.a2());
   }
   return os;
 }

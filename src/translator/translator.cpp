@@ -20,10 +20,10 @@ void Translator::visit(FunctionPtr &function) {
   auto new_function_entry = std::make_shared<FunctionEntry>(function);
   if (function->compound_statement()) { // 函数定义
     symbol_table_.add_function_definition(new_function_entry);
-    ir_builder_->new_ir(IROp::FUNCBEG, new_ir_addr(function->name()));
+    ir_builder_->new_ir(IROp::FUNBEG, new_ir_addr(function->name()));
     visit(function->parameter_list());
     visit(function->compound_statement());
-    ir_builder_->new_ir(IROp::FUNCEND);
+    ir_builder_->new_ir(IROp::FUNEND);
   } else {  // 函数声明
     symbol_table_.add_function_declaration(new_function_entry);
   }
@@ -80,11 +80,18 @@ void Translator::visit(DeclarationPtr &declaration) {
   symbol_table_.add_variable(declaration->var());
   if (declaration->init_exp()) {
     visit(declaration->init_exp());
+    auto right_var1 = tmp_var_;
+    auto left_var0 = symbol_table_.lookup_ir_var(declaration->var()->name());
+    // TODO: 处理left_var0是全局变量的情况
+    // 没有必要修改tmp_var_，因为声明语句不能再赋给其他的值
+    ir_builder_->new_ir(IROp::MOV, new_ir_addr(left_var0), new_ir_addr(right_var1));
   }
 }
+// expression_list只用于传递函数参数
 void Translator::visit(ExpressionListPtr &expression_list) {
   for (auto &exp : expression_list->expression_vec()) {
     visit(exp);
+    ir_builder_->new_ir(IROp::PARAM, new_ir_addr(tmp_var_));
   }
 }
 void Translator::visit(ExpressionPtr &expression) {
@@ -204,6 +211,7 @@ void Translator::visit(PostfixPtr &postfix) {
     visit(std::get<FuncCallPtr>(postfix->value()));
   } else if (std::holds_alternative<ArrayPtr>(postfix->value())) {
     visit(std::get<ArrayPtr>(postfix->value()));
+    // 暂时不处理
   } else { assert(false); }
 }
 void Translator::visit(PrimaryPtr &primary) {
@@ -215,7 +223,13 @@ void Translator::visit(PrimaryPtr &primary) {
     ir_builder_->new_ir(IROp::MOV, new_ir_addr(tmp_var_), new_ir_addr(imm));
   } else if (std::holds_alternative<std::string>(primary->value())) {
     auto name = std::get<std::string>(primary->value());
-    auto result = symbol_table_.lookup_variable(name);
+    tmp_var_ = symbol_table_.lookup_ir_var(name);
+    if (tmp_var_.is_global()) { // 全局变量
+      auto addr_var = IRVar(symbol_table_.alloc_var());
+      ir_builder_->new_ir(IROp::LA, new_ir_addr(addr_var), new_ir_addr(name));
+      tmp_var_ = IRVar(symbol_table_.alloc_var());
+      ir_builder_->new_ir(IROp::LOAD, new_ir_addr(tmp_var_), new_ir_addr(addr_var), new_ir_addr(0));
+    }
   } else { assert(false); }
 }
 void Translator::visit(ReturnStatementPtr &return_statement) {
@@ -229,9 +243,17 @@ void Translator::visit(ExpStatementPtr &exp_statement) {
 }
 void Translator::visit(IfStatementPtr &if_statement) {
   visit(if_statement->cond_exp());
+  int false_label_number = symbol_table_.alloc_label();
+  ir_builder_->new_ir(IROp::BEQZ, new_ir_addr(tmp_var_), new_ir_addr(false_label_number));
   visit(if_statement->if_stmt());
   if (if_statement->else_stmt()) {  // has else branch
+    int end_label_number = symbol_table_.alloc_label();
+    ir_builder_->new_ir(IROp::JMP, new_ir_addr(end_label_number));
+    ir_builder_->new_ir(IROp::LABEL, new_ir_addr(false_label_number));
     visit(if_statement->else_stmt());
+    ir_builder_->new_ir(IROp::LABEL, new_ir_addr(end_label_number));
+  } else {  // no else branch, false_label就是end_label
+    ir_builder_->new_ir(IROp::LABEL, new_ir_addr(false_label_number));
   }
 }
 void Translator::visit(ForExpStatementPtr &for_exp_statement) {
@@ -239,13 +261,18 @@ void Translator::visit(ForExpStatementPtr &for_exp_statement) {
   if (for_exp_statement->init_exp()) {
     visit(for_exp_statement->init_exp());
   }
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_begin_label()));
   if (for_exp_statement->cond_exp()) {
     visit(for_exp_statement->cond_exp());
   }
+  ir_builder_->new_ir(IROp::BEQZ, new_ir_addr(tmp_var_), new_ir_addr(symbol_table_.loop_break_label()));
+  visit(for_exp_statement->statement());
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_continue_label()));
   if (for_exp_statement->update_exp()) {
     visit(for_exp_statement->update_exp());
   }
-  visit(for_exp_statement->statement());
+  ir_builder_->new_ir(IROp::JMP, new_ir_addr(symbol_table_.loop_begin_label()));
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_break_label()));
   symbol_table_.leave_loop();
 }
 void Translator::visit(ForDecStatementPtr &for_dec_statement) {
@@ -253,37 +280,59 @@ void Translator::visit(ForDecStatementPtr &for_dec_statement) {
   if (for_dec_statement->init_decl()) {
     visit(for_dec_statement->init_decl());
   }
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_begin_label()));
   if (for_dec_statement->cond_exp()) {
     visit(for_dec_statement->cond_exp());
   }
+  ir_builder_->new_ir(IROp::BEQZ, new_ir_addr(tmp_var_), new_ir_addr(symbol_table_.loop_break_label()));
+  visit(for_dec_statement->statement());
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_continue_label()));
   if (for_dec_statement->update_exp()) {
     visit(for_dec_statement->update_exp());
   }
-  visit(for_dec_statement->statement());
+  ir_builder_->new_ir(IROp::JMP, new_ir_addr(symbol_table_.loop_begin_label()));
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_break_label()));
   symbol_table_.leave_loop();
 }
 void Translator::visit(WhileStatementPtr &while_statement) {
   symbol_table_.enter_loop();
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_begin_label()));
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_continue_label()));
   visit(while_statement->cond_exp());
+  ir_builder_->new_ir(IROp::BEQZ, new_ir_addr(tmp_var_), new_ir_addr(symbol_table_.loop_break_label()));
   visit(while_statement->statement());
+  ir_builder_->new_ir(IROp::JMP, new_ir_addr(symbol_table_.loop_begin_label()));
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_break_label()));
   symbol_table_.leave_loop();
 }
 void Translator::visit(DoStatementPtr &do_statement) {
   symbol_table_.enter_loop();
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_begin_label()));
   visit(do_statement->statement());
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_continue_label()));
   visit(do_statement->cond_exp());
+  ir_builder_->new_ir(IROp::BEQZ, new_ir_addr(tmp_var_), new_ir_addr(symbol_table_.loop_break_label()));
+  ir_builder_->new_ir(IROp::JMP, new_ir_addr(symbol_table_.loop_begin_label()));
+  ir_builder_->new_ir(IROp::LABEL, new_ir_addr(symbol_table_.loop_break_label()));
   symbol_table_.leave_loop();
 }
 void Translator::visit(BreakStatementPtr &break_statement) {
+  ir_builder_->new_ir(IROp::JMP, new_ir_addr(symbol_table_.loop_break_label()));
 }
 void Translator::visit(ContinueStatementPtr &continue_statement) {
+  ir_builder_->new_ir(IROp::JMP, new_ir_addr(symbol_table_.loop_continue_label()));
 }
 void Translator::visit(AssignExpPtr &assign_exp) {
+  visit(assign_exp->right()); // 先访问右边的表达式
+  auto right_var1 = tmp_var_;
   visit(assign_exp->left());
-  visit(assign_exp->right());
+  ir_builder_->new_ir(IROp::MOV, new_ir_addr(tmp_var_), new_ir_addr(right_var1));
+  // 不修改tmp_var_，这样assign_exp的返回值就是左边的值
 }
 void Translator::visit(FuncCallPtr &func_call) {
   visit(func_call->expression_list());
+  tmp_var_ = IRVar(symbol_table_.alloc_var());
+  ir_builder_->new_ir(IROp::CALL, new_ir_addr(tmp_var_), new_ir_addr(func_call->func_name()));
 }
 void Translator::visit(ArrayPtr &array) {
   if (std::holds_alternative<PrimaryPtr>(array->name())) {
