@@ -3,6 +3,9 @@ project(Scompiler)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(Boost COMPONENTS program_options REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+
 include_directories(src/base)
 include_directories(src/util)
 
@@ -23,4 +26,4 @@ add_executable(Scompiler
         src/reg_allocator/reg_allocator.cpp
         src/asm_generator/asm_generator.cpp
         )
-target_link_libraries(Scompiler boost_program_options)
+target_link_libraries(Scompiler ${Boost_LIBRARIES})
