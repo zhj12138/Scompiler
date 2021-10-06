@@ -78,13 +78,38 @@ void Translator::visit(StatementPtr &statement) {
 }
 void Translator::visit(DeclarationPtr &declaration) {
   symbol_table_.add_variable(declaration->var());
-  if (declaration->init_exp()) {
-    visit(declaration->init_exp());
-    auto right_var1 = tmp_var_;
-    auto left_var0 = symbol_table_.lookup_ir_var(declaration->var()->name());
-    // TODO: 处理left_var0是全局变量的情况
-    // 没有必要修改tmp_var_，因为声明语句不能再赋给其他的值
-    ir_builder_->new_ir(IROp::MOV, new_ir_addr(left_var0), new_ir_addr(right_var1));
+  auto [var, is_global] = symbol_table_.lookup_variable(declaration->var()->name());
+  auto is_array = var->type().is_array();
+  auto get_number_of_init_exp = [](const ExpressionPtr &exp) {
+    auto cond = std::get<ConditionalPtr>(exp->assignment()->value());
+    auto postfix = std::get<PostfixPtr>(cond->cond()->right()->right()->right()->right()->right()->right()->value());
+    auto primary = std::get<PrimaryPtr>(postfix->value());
+    return std::get<int>(primary->value());
+  };
+  if (is_global) {  // 全局变量
+    if (is_array) {
+      ir_builder_->new_ir(IROp::GBSS, new_ir_addr(var->name()), new_ir_addr(var->type().array_size() * 4));
+    } else {
+      if (declaration->init_exp()) {  // 初始化
+        int number = get_number_of_init_exp(declaration->init_exp()); // 在checker阶段进行检查
+        ir_builder_->new_ir(IROp::GINI, new_ir_addr(var->name()), new_ir_addr(number));
+      } else {
+        ir_builder_->new_ir(IROp::GBSS, new_ir_addr(var->name()), new_ir_addr(4));
+      }
+    }
+  } else {
+    if (is_array) {
+      tmp_var_ = symbol_table_.lookup_ir_var(var->name());  // 为局部数组的基址分配一个IR变量
+      ir_builder_->new_ir(IROp::ALLOC, new_ir_addr(tmp_var_), new_ir_addr(var->type().array_size() * 4));
+    } else {
+      if (declaration->init_exp()) {
+        visit(declaration->init_exp());
+        auto right_var1 = tmp_var_;
+        auto left_var0 = symbol_table_.lookup_ir_var(declaration->var()->name());
+        // 没有必要修改tmp_var_，因为声明语句不能再赋给其他的值
+        ir_builder_->new_ir(IROp::MOV, new_ir_addr(left_var0), new_ir_addr(right_var1));
+      }
+    }
   }
 }
 // expression_list只用于传递函数参数
@@ -224,12 +249,18 @@ void Translator::visit(PrimaryPtr &primary) {
   } else if (std::holds_alternative<std::string>(primary->value())) {
     auto name = std::get<std::string>(primary->value());
     tmp_var_ = symbol_table_.lookup_ir_var(name);
+    auto [variable, is_global] = symbol_table_.lookup_variable(name);
+    bool is_array = variable->type().is_array();
     if (tmp_var_.is_global()) { // 全局变量
-      auto addr_var = IRVar(symbol_table_.alloc_var());
-      ir_builder_->new_ir(IROp::LA, new_ir_addr(addr_var), new_ir_addr(name));
       tmp_var_ = IRVar(symbol_table_.alloc_var());
-      ir_builder_->new_ir(IROp::LOAD, new_ir_addr(tmp_var_), new_ir_addr(addr_var), new_ir_addr(0));
-    }
+      ir_builder_->new_ir(IROp::LA, new_ir_addr(tmp_var_), new_ir_addr(name));
+      if (!is_array) {  // 数组类型只需加载到地址，而变量类型需要加载到值
+        auto addr_var = tmp_var_;
+        tmp_var_ = IRVar(symbol_table_.alloc_var());
+        ir_builder_->new_ir(IROp::LOAD, new_ir_addr(tmp_var_), new_ir_addr(addr_var), new_ir_addr(0));
+      }
+    } // 局部变量无需做额外处理
+    name_ = variable->name();
   } else { assert(false); }
 }
 void Translator::visit(ReturnStatementPtr &return_statement) {
@@ -326,7 +357,15 @@ void Translator::visit(AssignExpPtr &assign_exp) {
   visit(assign_exp->right()); // 先访问右边的表达式
   auto right_var1 = tmp_var_;
   visit(assign_exp->left());
-  ir_builder_->new_ir(IROp::MOV, new_ir_addr(tmp_var_), new_ir_addr(right_var1));
+  auto unary_name = name_;
+  auto [var, is_global] = symbol_table_.lookup_variable(unary_name);
+  if (is_global || var->type().is_array()) {  // 全局变量或全局数组或局部数组，都要用STORE指令存入内存中
+    // 直接把最后一条LOAD指令改成STORE指令
+    ir_builder_->last_ir()->op() = IROp::STORE;
+    ir_builder_->last_ir()->a0() = new_ir_addr(right_var1);
+  } else {
+    ir_builder_->new_ir(IROp::MOV, new_ir_addr(tmp_var_), new_ir_addr(right_var1));
+  }
   // 不修改tmp_var_，这样assign_exp的返回值就是左边的值
 }
 void Translator::visit(FuncCallPtr &func_call) {
@@ -336,11 +375,38 @@ void Translator::visit(FuncCallPtr &func_call) {
 }
 void Translator::visit(ArrayPtr &array) {
   if (std::holds_alternative<PrimaryPtr>(array->name())) {
-    for (auto &exp : array->expression_vec()) {
-      visit(exp);
+    auto primary = std::get<PrimaryPtr>(array->name());
+    visit(primary);
+    auto base_var = tmp_var_;
+    auto array_name = name_;
+    auto [result, is_global] = symbol_table_.lookup_variable(array_name);
+    auto dimension_vec = result->type().dimension_vec();
+    int sz = dimension_vec.size();
+    std::vector<int> offset_vec(sz);
+    int ini = 1;
+    for (int i = sz - 1; i >= 0; --i) {
+      if (i == sz - 1) {
+        offset_vec[i] = ini;
+      } else {
+        offset_vec[i] = offset_vec[i - 1] * dimension_vec[i - 1];
+      }
     }
+    auto offset_var = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(IROp::MOV, new_ir_addr(offset_var), new_ir_addr(0));  // 初始化为0
+    for (int i = 0; i < sz; ++i) {
+      visit(array->expression_vec()[i]);
+      auto t_var = IRVar(symbol_table_.alloc_var());
+      ir_builder_->new_ir(IROp::MUL, new_ir_addr(t_var), new_ir_addr(tmp_var_), new_ir_addr(offset_vec[i]));
+      ir_builder_->new_ir(IROp::ADD, new_ir_addr(offset_var), new_ir_addr(offset_var), new_ir_addr(t_var));
+    }
+    ir_builder_->new_ir(IROp::MUL, new_ir_addr(offset_var), new_ir_addr(offset_var), new_ir_addr(4)); // 偏移量乘以4
+    auto addr_var = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(IROp::SUB, new_ir_addr(addr_var), new_ir_addr(base_var), new_ir_addr(offset_var));
+    tmp_var_ = IRVar(symbol_table_.alloc_var());
+    ir_builder_->new_ir(IROp::LOAD, new_ir_addr(tmp_var_), new_ir_addr(addr_var), new_ir_addr(0));
+    name_ = array_name;
   } else if (std::holds_alternative<FuncCallPtr>(array->name())) {
-    assert(false);  // 暂不支持该语法
+    assert(false);  // 不支持该语法
   } else {
     assert(false);
   }

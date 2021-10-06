@@ -38,6 +38,13 @@ class VariableType {
                       [](int a, int b) { return a == b; });
   }
   bool operator!=(const VariableType &other) const { return !(*this == other); }
+  int array_size() {
+    int i = 1;
+    for (auto dim : dimension_vec_) {
+      i *= dim;
+    }
+    return i;
+  }
 
  private:
   SupportType type_;

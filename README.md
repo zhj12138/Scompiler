@@ -247,11 +247,45 @@ Checker同样使用Visitor模式实现。
 
 ## 语法制导翻译：Translator
 
-目前不支持数组和全局变量。
-
 ### 中间代码：IR
 
-IR定义位于`src/base/ir.hpp`中。
+IR定义位于`src/base/ir.hpp`中，支持如下IR指令：
+
+```text
+ str代表字符串类型，imm代表数字类型，var代表变量类型, null代表不使用
+ Op       a0      a1      a2      作用
+ FUNBEG   str     null    null    函数a0开始
+ FUNEND   null    null    null    函数结束
+ LABEL    imm     null    null    根据a0生成一个唯一的标签
+ RET      var|imm null    null    返回a0
+ MOV      var     var|imm null    a0 = a1
+ NEG      var     var     null    a0 = -a1
+ NOT      var     var     null    a0 = ~a1
+ LNOT     var     var     null    a0 = !a1
+ MUL      var     var|imm var|imm a0 = a1 * a2
+ DIV      var     var|imm var|imm a0 = a1 / a2
+ REM      var     var|imm var|imm a0 = a1 % a2
+ ADD      var     var|imm var|imm a0 = a1 + a2
+ SUB      var     var|imm var|imm a0 = a1 - a2
+ LT       var     var|imm var|imm a0 = a1 < a2
+ GT       var     var|imm var|imm a0 = a1 > a2
+ LE       var     var|imm var|imm a0 = (a1 <= a2)
+ GE       var     var|imm var|imm a0 = (a1 >= a2)
+ EQ       var     var|imm var|imm a0 = (a1 == a2)
+ NE       var     var|imm var|imm a0 = (a1 != a2)
+ LAND     var     var|imm var|imm a0 = (a1 && a2)
+ LOR      var     var|imm var|imm a0 = (a1 || a2)
+ JMP      imm     null    null    跳转到a0对应的标签
+ BEQZ     var|imm imm     null    如果a0 == 0,则跳转到a1对应的标签
+ PARAM    var     null    null    将a0作为参数进行传递
+ CALL     var     str     null    调用函数a1，将返回值存放在a0中
+ LA       var     str     null    将全局变量a1的地址加载到a0中
+ LOAD     var     var     var|imm 以a1为基地址，a2为偏移地址的对应地址的值加载到a0中
+ STORE    var     var     var|imm 将a0的值存放到以a1为基地址，a2为偏移地址的对应地址
+ ALLOC    var     imm     null    为局部数组分配a1大小的空间，返回首地址到var中
+ GBSS     str     imm     null    为全局变量a0分配a1大小的空间(可能是数组)
+ GINI     str     imm     null    为全局变量a0分配内存，并初始化为imm(不为数组)
+```
 
 ## 优化器：Optimizer
 
@@ -264,5 +298,4 @@ IR定义位于`src/base/ir.hpp`中。
 ## 目标代码生成：ASMGenerator
 
 使用RiscV汇编，因为寄存器分配暂未实现，所以该部分暂时无法完成(其实也可以实现一个纯栈式的生成器，不过那样目标代码执行效率就会很低了)。
-
 

@@ -256,8 +256,18 @@ void Checker::visit(ContinueStatementPtr &continue_statement) {
   }
 }
 void Checker::visit(AssignExpPtr &assign_exp) {
-  visit(assign_exp->left());
   visit(assign_exp->right());
+  visit(assign_exp->left());
+  // 赋值表达式的左边必须是一个变量，或者数组的某个值
+  auto unary = assign_exp->left();
+  assert(std::holds_alternative<PostfixPtr>(unary->value()));
+  auto postfix = std::get<PostfixPtr>(unary->value());
+  assert(!std::holds_alternative<FuncCallPtr>(postfix->value())); // 暂时不支持函数作为左值(因为不支持指针)
+  if (std::holds_alternative<PrimaryPtr>(postfix->value())) {
+    auto primary = std::get<PrimaryPtr>(postfix->value());
+    assert(!std::holds_alternative<int>(primary->value())); // 数字不能作为左值
+  }
+  // 暂时不对'(' expression ')'的情况进行更多检查
 }
 void Checker::visit(FuncCallPtr &func_call) {
   auto result = symbol_table_.lookup_function(func_call->func_name());
@@ -274,19 +284,18 @@ void Checker::visit(ArrayPtr &array) {
   if (std::holds_alternative<PrimaryPtr>(array->name())) {
     // 只检查变量是否为数组类型，暂时不检查维度
     auto primary = std::get<PrimaryPtr>(array->name());
-    if (!std::holds_alternative<std::string>(primary->value())) {
-      throw check_error("array name should be string");
-    }
-    auto name = std::get<std::string>(primary->value());
-    auto [result, is_global] = symbol_table_.lookup_variable(name);
-    if (!result) {  // 其实已经检查过了
-      throw check_error("use unknown variable: " + name);
-    }
-    if (!result->type().is_array()) {
-      throw check_error("variable " + name + " is not array");
-    }
-    for (auto &exp : array->expression_vec()) {
-      visit(exp);
+    if (std::holds_alternative<std::string>(primary->value())) {
+      auto name = std::get<std::string>(primary->value());
+      auto [result, is_global] = symbol_table_.lookup_variable(name);
+      if (!result) {  // 其实已经检查过了
+        throw check_error("use unknown variable: " + name);
+      }
+      if (!result->type().is_array()) {
+        throw check_error("variable " + name + " is not array");
+      }
+      for (auto &exp : array->expression_vec()) {
+        visit(exp);
+      }
     }
   } else if (std::holds_alternative<FuncCallPtr>(array->name())) {
     assert(false);  // 暂不支持该语法

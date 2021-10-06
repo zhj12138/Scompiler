@@ -688,6 +688,12 @@ std::string to_string(IROp op) {
     case IROp::BEQZ: return "BEQZ";
     case IROp::PARAM: return "PARAM";
     case IROp::CALL: return "CALL";
+    case IROp::LA: return "LA";
+    case IROp::LOAD: return "LOAD";
+    case IROp::STORE: return "STORE";
+    case IROp::ALLOC: return "ALLOC";
+    case IROp::GBSS: return "GBSS";
+    case IROp::GINI: return "GINI";
   }
   assert(false);
 }

@@ -59,7 +59,11 @@ inline IRAddrPtr new_ir_addr(const IRAddr::value_type &v) {
 // PARAM    var     null    null    将a0作为参数进行传递
 // CALL     var     str     null    调用函数a1，将返回值存放在a0中
 // LA       var     str     null    将全局变量a1的地址加载到a0中
-// LOAD     var     var     var|imm 以a1为基地址，a2为偏移地址对应的值加载到a0中
+// LOAD     var     var     var|imm 以a1为基地址，a2为偏移地址的对应地址的值加载到a0中
+// STORE    var     var     var|imm 将a0的值存放到以a1为基地址，a2为偏移地址的对应地址
+// ALLOC    var     imm     null    为局部数组分配a1大小的空间，返回首地址到var中
+// GBSS     str     imm     null    为全局变量a0分配a1大小的空间(可能是数组)
+// GINI     str     imm     null    为全局变量a0分配内存，并初始化为imm(不为数组)
 enum class IROp {
   FUNBEG,
   FUNEND,
@@ -88,6 +92,10 @@ enum class IROp {
   CALL,
   LA,
   LOAD,
+  STORE,
+  ALLOC,
+  GBSS,
+  GINI,
 };
 class IRCode {
  public:
@@ -129,6 +137,7 @@ class IRBuilder {
                   const IRAddrPtr &a2 = nullptr) {
     return ircode_list_.insert(pos, std::make_shared<IRCode>(op, a0, a1, a2));
   }
+  IRCodePtr &last_ir() { return ircode_list_.back(); }
 
   std::list<IRCodePtr> &ircode_list() { return ircode_list_; }
  private:
