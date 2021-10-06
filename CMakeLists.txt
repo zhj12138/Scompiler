@@ -26,4 +26,4 @@ add_executable(Scompiler
         src/reg_allocator/reg_allocator.cpp
         src/asm_generator/asm_generator.cpp
         )
-target_link_libraries(Scompiler boost_program_options)
+target_link_libraries(Scompiler ${Boost_LIBRARIES})
