@@ -1,6 +1,26 @@
 # Scompiler
 
-编译器源代码位于`src`目录下，用于测试的C文件(被编译文件)位于`test`目录下。
+## 项目结构
+
+项目目录下有如下文件夹
+
+* src：编译器源代码。
+  * base: 一些基本的类的定义。
+  * lexer: 词法分析器。
+  * parser: 语法分析器。
+  * checker: 语义检查器。
+  * translator: 语法制导翻译器。
+  * optimizer: 优化器。
+  * reg_allocator: 寄存器分配器。
+  * asm_generator: 目标代码生成器
+* test: 用于测试的C文件(被编译代码)。
+* output: 编译器的输出。
+  * token.txt: 所有token。
+  * ast.txt: 语法树。
+  * ir.txt: 生成的IR代码。
+  * asm.txt: 生成的目标代码。
+
+> 注：我并未打印出符号表，因为我的符号表是动态生成的，离开作用域后会被清空。
 
 ## 依赖
 
