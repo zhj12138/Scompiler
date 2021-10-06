@@ -3,6 +3,8 @@ project(Scompiler)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(Boost REQUIRED)
+
 include_directories(src/base)
 include_directories(src/util)
 
