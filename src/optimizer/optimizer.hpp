@@ -2,18 +2,13 @@
 #define SCOMPILER_SRC_OPTIMIZER_OPTIMIZER_HPP_
 
 #include "ir.hpp"
+#include "module.hpp"
 
-class Optimizer {
- public:
-  Optimizer() = default;
-  ~Optimizer() = default;
-
-  void optimize(IRBuilderPtr &ir_builder);
-};
-
-inline void optimize(IRBuilderPtr &ir_builder) {
-  Optimizer optimizer;
-  optimizer.optimize(ir_builder);
+inline void optimize(IRBuilderPtr &ir_builder, int optimize_level) {
+  Module module(ir_builder->ircode_list());
+  module.optimize(optimize_level);
+  module.allocate_registers();
+  ir_builder->ircode_list() = module.collect();
 }
 
 #endif //SCOMPILER_SRC_OPTIMIZER_OPTIMIZER_HPP_

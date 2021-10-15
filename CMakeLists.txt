@@ -22,8 +22,9 @@ add_executable(Scompiler
         src/parser/recursive_descent_parser.cpp
         src/checker/checker.cpp
         src/translator/translator.cpp
-        src/optimizer/optimizer.cpp
-        src/reg_allocator/reg_allocator.cpp
+        src/optimizer/basic_block.cpp
+        src/optimizer/function_block.cpp
+        src/optimizer/module.cpp
         src/asm_generator/asm_generator.cpp
         )
 target_link_libraries(Scompiler ${Boost_LIBRARIES})

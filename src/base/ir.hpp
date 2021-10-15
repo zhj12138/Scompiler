@@ -190,4 +190,12 @@ inline IROp to_ir_op(Equality::Op op) {
   assert(false);
 }
 
+inline bool is_jmp_op(IROp op) {
+  return op >= IROp::JMP && op <= IROp::BEQZ;
+}
+
+inline bool is_conditional_jmp_op(IROp op) {
+  return op == IROp::BEQZ;
+}
+
 #endif //SCOMPILER_SRC_BASE_IR_HPP_
