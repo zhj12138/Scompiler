@@ -643,7 +643,7 @@ std::ostream &operator<<(std::ostream &os, ProgramPtr &program) {
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, IRVar &var) {
+std::ostream &operator<<(std::ostream &os, const IRVar &var) {
   if (var.is_global()) {
     os << var.name();
   } else {

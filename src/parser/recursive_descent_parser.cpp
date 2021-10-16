@@ -61,11 +61,13 @@ void RecursiveDescentParser::visit(ParameterListPtr &parameter_list) {
   BaseType var_type;
   std::string id;
   std::vector<VariablePtr> variable_vec;
+  int param_num = 0;
 
   while (true) {
     visit(var_type);
     id = token_stream_.consume_identifier();
     variable_vec.push_back(std::make_shared<Variable>(var_type.type(), id));
+    variable_vec.back()->set_param_num(++param_num);
     if (!token_stream_.is(TokenType::Comma)) break; // end
     token_stream_.advance();
   }

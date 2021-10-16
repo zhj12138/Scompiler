@@ -33,7 +33,7 @@ inline IRAddrPtr new_ir_addr(const IRAddr::value_type &v) {
 
 // str代表字符串类型，imm代表数字类型，var代表变量类型, null代表不使用
 // Op       a0      a1      a2      作用
-// FUNBEG   str     null    null    函数a0开始
+// FUNBEG   str     imm     null    函数a0开始, 共有a1个参数
 // FUNEND   null    null    null    函数结束
 // LABEL    imm     null    null    根据a0生成一个唯一的标签
 // RET      var|imm null    null    返回a0
@@ -196,6 +196,14 @@ inline bool is_jmp_op(IROp op) {
 
 inline bool is_conditional_jmp_op(IROp op) {
   return op == IROp::BEQZ;
+}
+
+inline bool is_unary_op(IROp op) {
+  return op >= IROp::NEG && op <= IROp::LNOT;
+}
+
+inline bool is_binary_op(IROp op) {
+  return op >= IROp::MUL && op <= IROp::LOR;
 }
 
 #endif //SCOMPILER_SRC_BASE_IR_HPP_

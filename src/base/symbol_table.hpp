@@ -185,7 +185,11 @@ class SymbolTable {
     if (is_global) {
       new_ir_var = IRVar(name);
     } else {
-      new_ir_var = IRVar(alloc_var());
+      if (variable->is_param()) {
+        new_ir_var = IRVar(-variable->param_num());
+      } else {
+        new_ir_var = IRVar(alloc_var());
+      }
     }
     variable->alloc(new_ir_var);
     return new_ir_var;

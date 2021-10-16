@@ -9,7 +9,7 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(src/base)
 include_directories(src/util)
 
-include_directories(src/third_party)
+include_directories(third_party)
 
 add_executable(Scompiler
         src/main.cpp
@@ -26,5 +26,5 @@ add_executable(Scompiler
         src/optimizer/function_block.cpp
         src/optimizer/module.cpp
         src/asm_generator/asm_generator.cpp
-        )
+        src/optimizer/detail_debug.cpp src/optimizer/detail_debug.hpp)
 target_link_libraries(Scompiler ${Boost_LIBRARIES})

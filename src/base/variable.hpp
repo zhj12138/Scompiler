@@ -16,7 +16,28 @@ class IRVar {
   explicit IRVar(value_type value) : value_(std::move(value)) {}
   [[nodiscard]] bool is_global() const { return std::holds_alternative<std::string>(value_); }
   int &num() { return std::get<int>(value_); }  // 局部变量用数字表示
+  [[nodiscard]] int num() const { return std::get<int>(value_); }  // 局部变量用数字表示
   std::string &name() { return std::get<std::string>(value_); } // 全局变量用变量名表示
+  [[nodiscard]] const std::string &name() const { return std::get<std::string>(value_); } // 全局变量用变量名表示
+  [[nodiscard]] bool is_param() const { return !is_global() && num() < 0; } // 负数代表函数参数
+
+  bool operator==(const IRVar &other) const {
+    if (is_global()) {
+      if (other.is_global()) return name() == other.name();
+    } else {
+      if (!other.is_global()) return num() == other.num();
+    }
+    return false;
+  }
+  bool operator<(const IRVar &other) const {
+    if (is_global()) {
+      if (other.is_global()) return name() < other.name();
+      return true;
+    } else {
+      if (!other.is_global()) return num() < other.num();
+      return false;
+    }
+  }
  private:
   value_type value_;
 };
@@ -68,9 +89,13 @@ class Variable {
     allocated_ = true;
     ir_var_ = ir_var;
   }
+  void set_param_num(int num) { param_num_ = num; }
+  [[nodiscard]] int param_num() const { return param_num_; }
+  [[nodiscard]] bool is_param() const { return param_num_ != 0; }
  private:
   VariableType type_;
   std::string name_;
+  int param_num_{0};  // 0表示不是参数，>=1表示参数
   bool allocated_{false}; // 是否分配了IR变量
   IRVar ir_var_;  // 被分配的IR变量
 };

@@ -2,6 +2,7 @@
 #define SCOMPILER_SRC_OPTIMIZER_BASIC_BLOCK_HPP_
 
 #include <utility>
+#include <set>
 
 #include "ir.hpp"
 
@@ -9,10 +10,18 @@ class BasicBlock {
   using WeakBasicBlockPtr = std::weak_ptr<BasicBlock>;
  public:
   explicit BasicBlock(std::list<IRCodePtr> ir_list) : ir_list_(std::move(ir_list)) {}
+
+  void calc_use_def();
+
   std::list<IRCodePtr> ir_list_;
+  int block_num_{0};
   std::list<WeakBasicBlockPtr> predecessor_list_;  // 前驱基本块
   std::list<WeakBasicBlockPtr> successor_list_;    // 后继基本块
-  int block_num_{0};
+
+  std::set<IRVar> use_; // 在定值前被使用的变量集合
+  std::set<IRVar> def_; // 在使用前被定值的变量集合
+  std::set<IRVar> live_variable_IN_;  // 入口处的活跃变量
+  std::set<IRVar> live_variable_OUT_; // 出口处的活跃变量
 };
 
 using BasicBlockPtr = std::shared_ptr<BasicBlock>;
