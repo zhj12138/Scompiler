@@ -64,7 +64,7 @@ inline IRAddrPtr new_ir_addr(const IRAddr::value_type &v) {
 // GBSS     str     imm     null    为全局变量a0分配a1大小的空间(可能是数组)
 // GINI     str     imm     null    为全局变量a0分配内存，并初始化为imm(不为数组)
 // 以下指令只会在寄存器分配后使用
-// FUNBEG   str     imm     imm     相比原来的FUNBEG，添加a2，表示局部数组的开始地址
+// FUNBEG   str     imm     imm     相比原来的FUNBEG，添加a2，表示局部数组的开始地址, a1更新为fp-sp的大小
 // LOADFP   var     imm     null    以a1为偏移地址, fp寄存器为基址的地址的值加载到寄存器a0中
 // STOREFP  var     imm     null    将寄存器a0的值存放到以a1为偏移地址, fp寄存器为基址的地址中
 // LARRAY   var     imm     null    结合新的FUNBEG中的a2一起翻译，a1为相对偏移，将局部数组的首地址加载到a0中, 由ALLOC指令转换而来

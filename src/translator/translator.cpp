@@ -116,8 +116,9 @@ void Translator::visit(DeclarationPtr &declaration) {
 }
 // expression_list只用于传递函数参数
 void Translator::visit(ExpressionListPtr &expression_list) {
-  for (auto &exp : expression_list->expression_vec()) {
-    visit(exp);
+  // 从右向左传递参数
+  for (auto it = expression_list->expression_vec().rbegin(); it != expression_list->expression_vec().rend(); ++it) {
+    visit(*it);
     ir_builder_->new_ir(IROp::PARAM, new_ir_addr(tmp_var_));
   }
 }

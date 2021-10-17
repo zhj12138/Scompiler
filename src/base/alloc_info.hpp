@@ -7,10 +7,12 @@
 #include <set>
 
 inline const int reg_x0 = 0;  // 始终是0
-inline const int reg_sp = 2;
-inline const int reg_t0 = 5;
-inline const int reg_t1 = 6;
-inline const int reg_fp = 8;
+inline const int reg_ra = 1;  // 存放返回地址
+inline const int reg_sp = 2;  // 栈地址
+inline const int reg_t0 = 5;  // 临时寄存器0
+inline const int reg_t1 = 6;  // 临时寄存器1
+inline const int reg_t2 = 7;  // 临时寄存器2
+inline const int reg_fp = 8;  // 栈帧地址
 
 class Register {
  public:
@@ -50,7 +52,8 @@ class AllocInfo {
  public:
   AllocInfo() {
     for (int i = 0; i < 32; ++i) {
-      if (i == reg_x0 || i == reg_fp || i == reg_sp || i == reg_t0 || i == reg_t1) continue; // 忽略x0, sp和fp
+      if (i == reg_x0 || i == reg_fp || i == reg_sp || i == reg_t0 || i == reg_t1 || i == reg_t2)
+        continue; // 忽略x0, sp和fp
       registers_.emplace_back(i);
     }
   }
@@ -70,25 +73,33 @@ class AllocInfo {
       t1_used_ = true;
       return reg_t1;
     }
+    if (!t2_used_) {
+      t2_used_ = true;
+      return reg_t2;
+    }
     assert(false);
   }
   void reset_tmp_regs() {
     t0_used_ = false;
     t1_used_ = false;
+    t2_used_ = false;
   }
   int alloc_for_array(int size) {
     int old_size = array_size_;
     array_size_ += size;
     return old_size;
   }
+  [[nodiscard]] int array_base_offset() const { return kSavedRegisterSize + spill_size_; }
+  [[nodiscard]] int fp_sp_diff() const { return kSavedRegisterSize + spill_size_ + array_size_; }
  private:
-  static const int kSavedRegisterSize = 8;  // 只需保存fp寄存器和sp寄存器, 一个寄存器4字节
+  static const int kSavedRegisterSize = 8;  // 只需保存fp寄存器和ra寄存器, 一个寄存器4字节
   std::vector<Register> registers_;
   int spill_size_{0};
   int array_size_{0};
   std::map<IRVar, int> spill_map_;
   bool t0_used_{false};
   bool t1_used_{false};
+  bool t2_used_{false};
 };
 
 #endif //SCOMPILER_SRC_OPTIMIZER_ALLOC_INFO_HPP_

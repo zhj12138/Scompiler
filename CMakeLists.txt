@@ -22,7 +22,7 @@ add_executable(Scompiler
         src/parser/recursive_descent_parser.cpp
         src/checker/checker.cpp
         src/translator/translator.cpp
-        src/optimizer/alloc_info.cpp
+        src/base/alloc_info.cpp
         src/optimizer/basic_block.cpp
         src/optimizer/function_block.cpp
         src/optimizer/module.cpp

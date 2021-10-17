@@ -28,7 +28,7 @@ int AllocInfo::alloc_for_var(const IRVar &var) {
 int AllocInfo::find_var_in_stack(const IRVar &var) const {
   auto result = spill_map_.find(var);
   assert(result != spill_map_.end());
-  return result->second + kSavedRegisterSize;
+  return -(result->second + kSavedRegisterSize) - 4;
 }
 
 void AllocInfo::clear_dead_reg(const std::set<IRVar> &live_variables) {
@@ -50,7 +50,7 @@ std::pair<int, int> AllocInfo::spill_var(const IRVar &new_var) {
   spill_size_ += 4;
   registers_[i].bind(new_var);
   if (var.is_param()) {
-    return {var.num() * 4, i};
+    return {(var.num() - 1) * 4, i};
   }
   return {spill_size_ - 4 + kSavedRegisterSize, i};
 }

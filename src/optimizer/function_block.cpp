@@ -233,6 +233,8 @@ void FunctionBlock::allocate_registers() {
       alloc_info.reset_tmp_regs();
     }
   }
+  header_->a2() = new_ir_addr(alloc_info.array_base_offset());
+  header_->a1()->imm() = alloc_info.fp_sp_diff();
 }
 
 
