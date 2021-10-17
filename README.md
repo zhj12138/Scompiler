@@ -11,13 +11,13 @@
   * checker: 语义检查器。
   * translator: 语法制导翻译器。
   * optimizer: 优化器。
-  * reg_allocator: 寄存器分配器。
   * asm_generator: 目标代码生成器
 * test: 用于测试的C文件(被编译代码)。
 * output: 编译器的输出。
   * token.txt: 所有token。
   * ast.txt: 语法树。
   * ir.txt: 生成的IR代码。
+  * low_ir.txt: 优化后的IR代码。  
   * asm.txt: 生成的目标代码。
 
 > 注：我并未打印出符号表，因为我的符号表是动态生成的，离开作用域后会被清空。
@@ -25,6 +25,22 @@
 ## 依赖
 
 使用`C++17`语法，部分代码依赖于`boost`库。
+
+## 命令行参数
+
+```shell
+Usage: Scompiler <input-file>
+Options:
+  -h [ --help ]            print help message
+  --input-file arg         the source c file
+  -t [ --token-file ] arg  file to store token stream
+  -a [ --ast-file ] arg    file to store ast tree
+  -i [ --ir-file ] arg     file to store ir code
+  -l [ --low-ir-file ] arg file to store low ir code(after optimized and reg 
+                           allocated)
+  -o [ --output-file ] arg file to store asm code
+  -O [ --optimize ] arg    optimize level
+```
 
 ## 文法
 
@@ -208,7 +224,7 @@ public:
 
 ### ASTPrinter
 
-一个辅助debug的工具，同样继承自`ASTVisitor`，可以打印出如下的一颗语法树：
+一个辅助debug的工具，同样继承自`ASTVisitor`，可以打印出类似下方的一颗语法树：
 
 ```text
 program
@@ -257,7 +273,7 @@ program
 
 目前只支持非常简单的代码检查，只检查函数和变量是否重复定义，变量是否未经声明就使用，函数调用参数是否合法。
 
-后面还会增加一些更加复杂的检查，如类型检查，左值检查等。
+后面可能还会增加一些更加复杂的检查，如类型检查，左值检查等。
 
 这个步骤其实是可以和后面的语法制导翻译合并在一起的，但是因为后面的语义检查会比较复杂，所以我现在把它单独提取出来作为一个阶段。
 
@@ -274,7 +290,7 @@ IR定义位于`src/base/ir.hpp`中，支持如下IR指令：
 ```text
  str代表字符串类型，imm代表数字类型，var代表变量类型, null代表不使用
  Op       a0      a1      a2      作用
- FUNBEG   str     null    null    函数a0开始
+ FUNBEG   str     imm     null    函数a0开始, 共有a1个参数
  FUNEND   null    null    null    函数结束
  LABEL    imm     null    null    根据a0生成一个唯一的标签
  RET      var|imm null    null    返回a0
@@ -307,15 +323,20 @@ IR定义位于`src/base/ir.hpp`中，支持如下IR指令：
  GINI     str     imm     null    为全局变量a0分配内存，并初始化为imm(不为数组)
 ```
 
+以下指令只会在寄存器分配后使用: 
+
+```text
+FUNBEG   str     imm     imm     相比原来的FUNBEG，添加a2，表示局部数组的开始地址, a1更新为fp-sp的大小
+LOADFP   var     imm     null    以a1为偏移地址, fp寄存器为基址的地址的值加载到寄存器a0中
+STOREFP  var     imm     null    将寄存器a0的值存放到以a1为偏移地址, fp寄存器为基址的地址中
+LARRAY   var     imm     null    结合新的FUNBEG中的a2一起翻译，a1为相对偏移，将局部数组的首地址加载到a0中, 由ALLOC指令转换而来
+```
+
 ## 优化器：Optimizer
 
-目前无任何功能
-
-## 寄存器分配：RegAllocator
-
-目前暂未实现
+目前只通过基于基本块的活跃变量分析进行了简单的寄存器分配。
 
 ## 目标代码生成：ASMGenerator
 
-使用RiscV汇编，因为寄存器分配暂未实现，所以该部分暂时无法完成(其实也可以实现一个纯栈式的生成器，不过那样目标代码执行效率就会很低了)。
+使用RiscV汇编。
 
