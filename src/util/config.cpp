@@ -15,6 +15,7 @@ void Config::init(int argc, char **argv) {
       ("token-file,t", value<std::string>(), "file to store token stream")
       ("ast-file,a", value<std::string>(), "file to store ast tree")
       ("ir-file,i", value<std::string>(), "file to store ir code")
+      ("low-ir-file,l", value<std::string>(), "file to store low ir code(after optimized and reg allocated)")
       ("output-file,o", value<std::string>(), "file to store asm code")
       ("optimize,O", value<int>(), "optimize level");
 
@@ -46,6 +47,10 @@ void Config::init(int argc, char **argv) {
   if (vm.count("ir-file")) {
     print_ir = true;
     ir_file = vm["ir-file"].as<std::string>();
+  }
+  if (vm.count("low-ir-file")) {
+    print_low_ir = true;
+    low_ir_file = vm["low-ir-file"].as<std::string>();
   }
   if (vm.count("output-file")) {
     output_file = vm["output-file"].as<std::string>();

@@ -29,4 +29,7 @@ void Module::optimize(int optimize_level) {
 }
 
 void Module::allocate_registers() {
+  for (auto &func : function_vec_) {
+    func->allocate_registers();
+  }
 }

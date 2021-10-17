@@ -1,75 +1,101 @@
-GBSS    a    4
-GBSS    b    8
-GBSS    c    32
-FUNBEG  func
-ALLOC   %0    12
-MOV     %1    0
+FUNBEG  main    0
+MOV     %0    1
+MOV     %1    %0
 MOV     %2    1
-MUL     %3    %2    1
-ADD     %1    %1    %3
-MUL     %1    %1    4
-SUB     %4    %0    %1
-STORE   %-1    %4    0
-MOV     %6    0
-MOV     %7    1
-MUL     %8    %7    1
-ADD     %6    %6    %8
-MUL     %6    %6    4
-SUB     %9    %0    %6
-LOAD    %10    %9    0
-LA      %11    a
-STORE   %10    %11    0
-LA      %13    a
-LOAD    %14    %13    0
-MOV     %15    2
-EQ      %15    %14    %15
-BEQZ    %15    0
-MOV     %16    3
-LA      %17    b
-MOV     %18    0
-MOV     %19    1
-MUL     %20    %19    1
-ADD     %18    %18    %20
-MUL     %18    %18    4
-SUB     %21    %17    %18
-STORE   %16    %21    0
-JMP     1
-LABEL   0
-MOV     %23    5
-LA      %24    b
-MOV     %25    0
-MOV     %26    1
-MUL     %27    %26    1
-ADD     %25    %25    %27
-MUL     %25    %25    4
-SUB     %28    %24    %25
-STORE   %23    %28    0
-LABEL   1
-MOV     %30    0
-RET     %30
-FUNEND  
-FUNBEG  main
-MOV     %0    2
-PARAM   %0
-CALL    %1    func
-LA      %2    b
-MOV     %3    0
+MOV     %3    %2
 MOV     %4    1
-MUL     %5    %4    1
-ADD     %3    %3    %5
-MUL     %3    %3    4
-SUB     %6    %2    %3
-LOAD    %7    %6    0
-MOV     %8    3
-EQ      %8    %7    %8
-BEQZ    %8    2
-MOV     %9    4
-MOV     %10    %9
-JMP     3
-LABEL   2
-MOV     %11    0
-MOV     %10    %11
-LABEL   3
-RET     %10
+MOV     %5    %4
+MOV     %6    1
+MOV     %7    %6
+MOV     %8    1
+MOV     %9    %8
+MOV     %10    1
+MOV     %11    %10
+MOV     %12    1
+MOV     %13    %12
+MOV     %14    1
+MOV     %15    %14
+MOV     %16    1
+MOV     %17    %16
+MOV     %18    1
+MOV     %19    %18
+MOV     %20    1
+MOV     %21    %20
+MOV     %22    1
+MOV     %23    %22
+MOV     %24    1
+MOV     %25    %24
+MOV     %26    1
+MOV     %27    %26
+MOV     %28    1
+MOV     %29    %28
+MOV     %30    1
+MOV     %31    %30
+MOV     %32    1
+MOV     %33    %32
+MOV     %34    1
+MOV     %35    %34
+MOV     %36    1
+MOV     %37    %36
+MOV     %38    1
+MOV     %39    %38
+MOV     %40    1
+MOV     %41    %40
+MOV     %42    1
+MOV     %43    %42
+MOV     %44    1
+MOV     %45    %44
+MOV     %46    1
+MOV     %47    %46
+MOV     %48    1
+MOV     %49    %48
+MOV     %50    1
+MOV     %51    %50
+MOV     %52    1
+MOV     %53    %52
+MOV     %54    1
+MOV     %55    %54
+MOV     %56    1
+MOV     %57    %56
+MOV     %58    1
+MOV     %59    %58
+MOV     %60    1
+MOV     %61    %60
+MOV     %62    1
+MOV     %63    %62
+MOV     %64    1
+MOV     %65    %64
+ADD     %66    %3    %5
+ADD     %67    %66    %7
+ADD     %68    %67    %9
+ADD     %69    %68    %11
+ADD     %70    %69    %13
+ADD     %71    %70    %15
+ADD     %72    %71    %17
+ADD     %73    %72    %19
+ADD     %74    %73    %21
+ADD     %75    %74    %23
+ADD     %76    %75    %25
+ADD     %77    %76    %27
+ADD     %78    %77    %29
+ADD     %79    %78    %31
+ADD     %80    %79    %33
+ADD     %81    %80    %35
+ADD     %82    %81    %37
+ADD     %83    %82    %39
+ADD     %84    %83    %41
+ADD     %85    %84    %43
+ADD     %86    %85    %45
+ADD     %87    %86    %47
+ADD     %88    %87    %49
+ADD     %89    %88    %51
+ADD     %90    %89    %53
+ADD     %91    %90    %55
+ADD     %92    %91    %57
+ADD     %93    %92    %59
+ADD     %94    %93    %61
+ADD     %95    %94    %63
+ADD     %96    %95    %65
+RET     %96
 FUNEND  
 

@@ -20,7 +20,9 @@ void Translator::visit(FunctionPtr &function) {
   auto new_function_entry = std::make_shared<FunctionEntry>(function);
   if (function->compound_statement()) { // 函数定义
     symbol_table_.add_function_definition(new_function_entry);
-    ir_builder_->new_ir(IROp::FUNBEG, new_ir_addr(function->name()));
+    ir_builder_->new_ir(IROp::FUNBEG,
+                        new_ir_addr(function->name()),
+                        new_ir_addr(static_cast<int>(function->parameter_list()->variables().size())));
     visit(function->parameter_list());
     visit(function->compound_statement());
     ir_builder_->new_ir(IROp::FUNEND);
@@ -78,7 +80,7 @@ void Translator::visit(StatementPtr &statement) {
 }
 void Translator::visit(DeclarationPtr &declaration) {
   symbol_table_.add_variable(declaration->var());
-  auto [var, is_global] = symbol_table_.lookup_variable(declaration->var()->name());
+  auto[var, is_global] = symbol_table_.lookup_variable(declaration->var()->name());
   auto is_array = var->type().is_array();
   auto get_number_of_init_exp = [](const ExpressionPtr &exp) {
     auto cond = std::get<ConditionalPtr>(exp->assignment()->value());
@@ -249,7 +251,7 @@ void Translator::visit(PrimaryPtr &primary) {
   } else if (std::holds_alternative<std::string>(primary->value())) {
     auto name = std::get<std::string>(primary->value());
     tmp_var_ = symbol_table_.lookup_ir_var(name);
-    auto [variable, is_global] = symbol_table_.lookup_variable(name);
+    auto[variable, is_global] = symbol_table_.lookup_variable(name);
     bool is_array = variable->type().is_array();
     if (tmp_var_.is_global()) { // 全局变量
       tmp_var_ = IRVar(symbol_table_.alloc_var());
@@ -358,7 +360,7 @@ void Translator::visit(AssignExpPtr &assign_exp) {
   auto right_var1 = tmp_var_;
   visit(assign_exp->left());
   auto unary_name = name_;
-  auto [var, is_global] = symbol_table_.lookup_variable(unary_name);
+  auto[var, is_global] = symbol_table_.lookup_variable(unary_name);
   if (is_global || var->type().is_array()) {  // 全局变量或全局数组或局部数组，都要用STORE指令存入内存中
     // 直接把最后一条LOAD指令改成STORE指令
     ir_builder_->last_ir()->op() = IROp::STORE;
@@ -379,7 +381,7 @@ void Translator::visit(ArrayPtr &array) {
     visit(primary);
     auto base_var = tmp_var_;
     auto array_name = name_;
-    auto [result, is_global] = symbol_table_.lookup_variable(array_name);
+    auto[result, is_global] = symbol_table_.lookup_variable(array_name);
     auto dimension_vec = result->type().dimension_vec();
     int sz = dimension_vec.size();
     std::vector<int> offset_vec(sz);

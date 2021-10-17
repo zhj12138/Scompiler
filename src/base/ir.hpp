@@ -9,7 +9,6 @@
 #include <utility>
 #include <variant>
 
-
 class IRAddr {
  public:
   // int代表立即数，string代表名字，IRVar代表变量
@@ -64,6 +63,11 @@ inline IRAddrPtr new_ir_addr(const IRAddr::value_type &v) {
 // ALLOC    var     imm     null    为局部数组分配a1大小的空间，返回首地址到var中
 // GBSS     str     imm     null    为全局变量a0分配a1大小的空间(可能是数组)
 // GINI     str     imm     null    为全局变量a0分配内存，并初始化为imm(不为数组)
+// 以下指令只会在寄存器分配后使用
+// FUNBEG   str     imm     imm     相比原来的FUNBEG，添加a2，表示局部数组的开始地址
+// LOADFP   var     imm     null    以a1为偏移地址, fp寄存器为基址的地址的值加载到寄存器a0中
+// STOREFP  var     imm     null    将寄存器a0的值存放到以a1为偏移地址, fp寄存器为基址的地址中
+// LARRAY   var     imm     null    结合新的FUNBEG中的a2一起翻译，a1为相对偏移，将局部数组的首地址加载到a0中, 由ALLOC指令转换而来
 enum class IROp {
   FUNBEG,
   FUNEND,
@@ -96,6 +100,9 @@ enum class IROp {
   ALLOC,
   GBSS,
   GINI,
+  LOADFP,
+  STOREFP,
+  LARRAY,
 };
 class IRCode {
  public:
@@ -113,6 +120,13 @@ class IRCode {
   IRAddrPtr a2_;
 };
 using IRCodePtr = std::shared_ptr<IRCode>;
+
+inline IRCodePtr new_ir(IROp op,
+                        const IRAddrPtr &a0 = nullptr,
+                        const IRAddrPtr &a1 = nullptr,
+                        const IRAddrPtr &a2 = nullptr) {
+  return std::make_shared<IRCode>(op, a0, a1, a2);
+}
 
 class IRBuilder {
  public:

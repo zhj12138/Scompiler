@@ -14,10 +14,12 @@ class Config {
   std::string token_file;
   std::string ast_file;
   std::string ir_file;
+  std::string low_ir_file;
   std::string output_file;
   bool print_token{false};
   bool print_ast{false};
   bool print_ir{false};
+  bool print_low_ir{false};
   int optimize_level{0};
 };
 

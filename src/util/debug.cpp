@@ -694,6 +694,9 @@ std::string to_string(IROp op) {
     case IROp::ALLOC: return "ALLOC";
     case IROp::GBSS: return "GBSS";
     case IROp::GINI: return "GINI";
+    case IROp::LOADFP: return "LOADFP";
+    case IROp::STOREFP: return "STOREFP";
+    case IROp::LARRAY: return "LARRAY";
   }
   assert(false);
 }

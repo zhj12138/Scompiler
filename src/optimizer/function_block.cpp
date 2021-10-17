@@ -1,5 +1,7 @@
 #include "function_block.hpp"
 
+#include "alloc_info.hpp"
+
 #include <algorithm>
 
 namespace detail {
@@ -146,10 +148,91 @@ void FunctionBlock::live_variable_analysis() {
       }
     }
   }
+  // 计算执行每一条IR语句之前的活跃变量
+  for (auto &basic_block : basic_block_vec_) {
+    basic_block->calc_live_variable();
+  }
 }
 
 void FunctionBlock::allocate_registers() {
-
+  live_variable_analysis();
+  // 寄存器分配后，依旧沿用旧的IRVar类，只使用数字类型表示寄存器号
+  AllocInfo alloc_info;
+  auto alloc_for_read = [&](const IRAddrPtr &addr,
+                            std::list<IRCodePtr> &ir_list,
+                            std::list<IRCodePtr>::iterator &iter) {
+    if (!addr->is_var()) return;  // 只处理变量
+    int reg_num = alloc_info.find_var_in_reg(addr->var());
+    if (reg_num == -1) {  // 当前未存放在寄存器中, 那么就必然存放在栈中
+      int offset = 0;
+      if (addr->var().is_param()) { // 函数参数
+        offset = addr->var().num() * 4;
+      } else {
+        offset = alloc_info.find_var_in_stack(addr->var());
+      }
+      int tmp_reg = alloc_info.alloc_tmp_reg();
+      ir_list.insert(iter, new_ir(IROp::LOADFP,
+                                         new_ir_addr(IRVar(tmp_reg)),
+                                         new_ir_addr(offset)));  // 将值加载到临时寄存器中
+      addr->var().num() = tmp_reg;
+    } else {  // 已经存放在寄存器中
+      addr->var().num() = reg_num;
+    }
+  };
+  auto alloc_for_write = [&](const IRAddrPtr &addr,
+                             std::list<IRCodePtr> &ir_list,
+                             std::list<IRCodePtr>::iterator &iter,
+                             const std::set<IRVar> &live_variables) {
+    if (!addr->is_var()) return;  // 只处理变量
+    int reg_num = alloc_info.find_var_in_reg(addr->var());
+    if (reg_num == -1) {  // 当前未存放在寄存器中
+      alloc_info.clear_dead_reg(live_variables);
+      if (alloc_info.has_free_register()) { // 有空闲的寄存器
+        reg_num = alloc_info.alloc_for_var(addr->var());
+        addr->var().num() = reg_num;
+      } else {  // 没有空闲的寄存器, 需要溢出到栈中
+        auto[offset, reg_num] = alloc_info.spill_var(addr->var());
+        // spill_var已经处理了函数参数的情况
+        // 把寄存器原来的值存放到栈中
+        ir_list.insert(iter, new_ir(IROp::STOREFP, new_ir_addr(IRVar(reg_num)), new_ir_addr(offset)));
+        addr->var().num() = reg_num;
+      }
+    } else {  // 已经存放在寄存器中
+      addr->var().num() = reg_num;
+    }
+  };
+  int num = 0;
+  for (auto &basic_block : basic_block_vec_) {
+    auto it = basic_block->ir_list_.begin();
+    auto live_it = basic_block->live_variable_set_deq_.begin();
+    for (; it != basic_block->ir_list_.end(); ++live_it, ++it) {
+      ++num;
+      auto cur_ir = *it;
+      auto &live_variables = *live_it;
+      IROp cur_op = cur_ir->op();
+      if (cur_op == IROp::RET || cur_op == IROp::BEQZ || cur_op == IROp::PARAM) {
+        alloc_for_read(cur_ir->a0(), basic_block->ir_list_, it);
+      } else if (cur_op == IROp::MOV || is_unary_op(cur_op)) {
+        alloc_for_read(cur_ir->a1(), basic_block->ir_list_, it);
+        alloc_for_write(cur_ir->a0(), basic_block->ir_list_, it, live_variables);
+      } else if (is_binary_op(cur_op) || cur_op == IROp::LOAD){
+        alloc_for_read(cur_ir->a1(), basic_block->ir_list_, it);
+        alloc_for_read(cur_ir->a2(), basic_block->ir_list_, it);
+        alloc_for_write(cur_ir->a0(), basic_block->ir_list_, it, live_variables);
+      } else if (cur_op == IROp::CALL || cur_op == IROp::LA) {
+        alloc_for_write(cur_ir->a0(), basic_block->ir_list_, it, live_variables);
+      } else if (cur_op == IROp::STORE) {
+        alloc_for_read(cur_ir->a0(), basic_block->ir_list_, it);
+        alloc_for_read(cur_ir->a1(), basic_block->ir_list_, it);
+        alloc_for_read(cur_ir->a2(), basic_block->ir_list_, it);
+      } else if (cur_op == IROp::ALLOC) {
+        alloc_for_write(cur_ir->a0(), basic_block->ir_list_, it, live_variables);
+        cur_ir->op() = IROp::LARRAY;
+        cur_ir->a1()->imm() = alloc_info.alloc_for_array(cur_ir->a1()->imm());
+      }// 忽略其他的情况
+      alloc_info.reset_tmp_regs();
+    }
+  }
 }
 
 

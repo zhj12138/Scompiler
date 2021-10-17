@@ -8,12 +8,14 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <variant>
 
 class IRVar {
  public:
   using value_type = std::variant<int, std::string>;
   IRVar() = default;
   explicit IRVar(value_type value) : value_(std::move(value)) {}
+  ~IRVar() = default;
   [[nodiscard]] bool is_global() const { return std::holds_alternative<std::string>(value_); }
   int &num() { return std::get<int>(value_); }  // 局部变量用数字表示
   [[nodiscard]] int num() const { return std::get<int>(value_); }  // 局部变量用数字表示

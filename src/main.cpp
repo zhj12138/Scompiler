@@ -30,7 +30,10 @@ int main(int argc, char *argv[]) {
     ofs << ir_builder << std::endl;
   }
   optimize(ir_builder, config.optimize_level);
-  // maybe print optimized ir here?
+  if (config.print_low_ir) {
+    std::ofstream ofs(config.low_ir_file);
+    ofs << ir_builder << std::endl;
+  }
   std::vector<std::string> asm_vec = generate(ir_builder);
   std::ofstream ofs(config.output_file);
   for (auto &code : asm_vec) {
