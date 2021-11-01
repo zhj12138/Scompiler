@@ -1,13 +1,8 @@
-FUNBEG  func    2
-ADD     %0    %-1    %-2
-RET     %0
-FUNEND  
 FUNBEG  main    0
-MOV     %0    2
-PARAM   %0
-MOV     %1    1
-PARAM   %1
-CALL    %2    func
-RET     %2
+MOV     %0    1
+MOV     %1    %0
+MOV     %2    3
+ADD     %3    %1    %2
+RET     %3
 FUNEND  
 

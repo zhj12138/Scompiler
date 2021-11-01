@@ -1,35 +1,23 @@
 program
-    ├── function(func)
-    │    ├── type: int
-    │    ├── parameterList
-    │    │    ├── variable(name: x, type: int)
-    │    │    └── variable(name: y, type: int)
-    │    └── compoundStatement
-    │        └── blockItem
-    │            └── statement
-    │                └── returnStatement
-    │                    └── expression
-    │                        └── assignment
-    │                            └── conditional
-    │                                └── logicalOr
-    │                                    └── logicalAnd
-    │                                        └── equality
-    │                                            └── relational
-    │                                                └── additive
-    │                                                    ├── additive
-    │                                                    │    └── multiplicative
-    │                                                    │        └── unary
-    │                                                    │            └── postfix
-    │                                                    │                └── primary(Identifier: x)
-    │                                                    ├── op: +
-    │                                                    └── multiplicative
-    │                                                        └── unary
-    │                                                            └── postfix
-    │                                                                └── primary(Identifier: y)
     └── function(main)
         ├── type: int
         ├── parameterList
         └── compoundStatement
+            ├── blockItem
+            │    └── declaration
+            │        ├── variable(name: a, type: int)
+            │        └── expression
+            │            └── assignment
+            │                └── conditional
+            │                    └── logicalOr
+            │                        └── logicalAnd
+            │                            └── equality
+            │                                └── relational
+            │                                    └── additive
+            │                                        └── multiplicative
+            │                                            └── unary
+            │                                                └── postfix
+            │                                                    └── primary(Interger: 1)
             └── blockItem
                 └── statement
                     └── returnStatement
@@ -41,33 +29,14 @@ program
                                             └── equality
                                                 └── relational
                                                     └── additive
+                                                        ├── additive
+                                                        │    └── multiplicative
+                                                        │        └── unary
+                                                        │            └── postfix
+                                                        │                └── primary(Identifier: a)
+                                                        ├── op: +
                                                         └── multiplicative
                                                             └── unary
                                                                 └── postfix
-                                                                    └── funcCall(func_name: func)
-                                                                        └── expressionList
-                                                                            ├── expression
-                                                                            │    └── assignment
-                                                                            │        └── conditional
-                                                                            │            └── logicalOr
-                                                                            │                └── logicalAnd
-                                                                            │                    └── equality
-                                                                            │                        └── relational
-                                                                            │                            └── additive
-                                                                            │                                └── multiplicative
-                                                                            │                                    └── unary
-                                                                            │                                        └── postfix
-                                                                            │                                            └── primary(Interger: 1)
-                                                                            └── expression
-                                                                                └── assignment
-                                                                                    └── conditional
-                                                                                        └── logicalOr
-                                                                                            └── logicalAnd
-                                                                                                └── equality
-                                                                                                    └── relational
-                                                                                                        └── additive
-                                                                                                            └── multiplicative
-                                                                                                                └── unary
-                                                                                                                    └── postfix
-                                                                                                                        └── primary(Interger: 2)
+                                                                    └── primary(Interger: 3)
 

@@ -1,39 +1,17 @@
 	.text
-	.global func
-func:
-	addi sp, sp, -8
-	sw ra, 4(sp)
-	sw fp, 0(sp)
-	addi fp, sp, 8
-	lw x5, -4(fp)
-	lw x6, -8(fp)
-	add x1, x5, x6
-	mv a0, x1
-	j func_epilogue
-func_epilogue:
-	lw ra, 4(sp)
-	lw fp, 0(sp)
-	addi sp, sp,8
-	ret
-	.text
 	.global main
 main:
 	addi sp, sp, -8
 	sw ra, 4(sp)
 	sw fp, 0(sp)
 	addi fp, sp, 8
-	li x5, 2
-	mv x1 , x5
-	addi sp, sp, -4
-	sw x1, 0(sp)
 	li x5, 1
 	mv x1 , x5
-	addi sp, sp, -4
-	sw x1, 0(sp)
-	call func
-	mv x1, a0
-	addi sp, sp, 8
-	mv a0, x1
+	mv x3 , x1
+	li x5, 3
+	mv x1 , x5
+	add x4, x3, x1
+	mv a0, x4
 	j main_epilogue
 main_epilogue:
 	lw ra, 4(sp)

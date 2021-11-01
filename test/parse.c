@@ -1,10 +1,8 @@
 int func(int a) {
   // valid numbers
-  int b = 0x7A8F;
   int b = 0X7a8F;
   int c = 0765;
   int d = 729834;
-  int e;
 
   if (a == 5) {
     b = b + 2 * c / d;
@@ -25,7 +23,7 @@ int func(int a) {
   }
 
   do {
-    a = (!(~a) | (b)) && (c || (d & e));
+    a = a + 1;
   } while (a < 99);
 
   int f = a ? b : c;
