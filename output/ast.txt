@@ -21,7 +21,7 @@ program
     │                                                    │        └── unary
     │                                                    │            └── postfix
     │                                                    │                └── primary(Identifier: x)
-    │                                                    │                └── op: +
+    │                                                    ├── op: +
     │                                                    └── multiplicative
     │                                                        └── unary
     │                                                            └── postfix
@@ -46,28 +46,28 @@ program
                                                                 └── postfix
                                                                     └── funcCall(func_name: func)
                                                                         └── expressionList
-                                                                        ├── expression
-                                                                        │    └── assignment
-                                                                        │        └── conditional
-                                                                        │            └── logicalOr
-                                                                        │                └── logicalAnd
-                                                                        │                    └── equality
-                                                                        │                        └── relational
-                                                                        │                            └── additive
-                                                                        │                                └── multiplicative
-                                                                        │                                    └── unary
-                                                                        │                                        └── postfix
-                                                                        │                                            └── primary(Interger: 1)
-                                                                        │                                            └── expression
-                                                                        │                                                └── assignment
-                                                                        │                                                    └── conditional
-                                                                        │                                                        └── logicalOr
-                                                                        │                                                            └── logicalAnd
-                                                                        │                                                                └── equality
-                                                                        │                                                                    └── relational
-                                                                        │                                                                        └── additive
-                                                                        │                                                                            └── multiplicative
-                                                                        │                                                                                └── unary
-                                                                        │                                                                                    └── postfix
-                                                                        │                                                                                        └── primary(Interger: 2)
+                                                                            ├── expression
+                                                                            │    └── assignment
+                                                                            │        └── conditional
+                                                                            │            └── logicalOr
+                                                                            │                └── logicalAnd
+                                                                            │                    └── equality
+                                                                            │                        └── relational
+                                                                            │                            └── additive
+                                                                            │                                └── multiplicative
+                                                                            │                                    └── unary
+                                                                            │                                        └── postfix
+                                                                            │                                            └── primary(Interger: 1)
+                                                                            └── expression
+                                                                                └── assignment
+                                                                                    └── conditional
+                                                                                        └── logicalOr
+                                                                                            └── logicalAnd
+                                                                                                └── equality
+                                                                                                    └── relational
+                                                                                                        └── additive
+                                                                                                            └── multiplicative
+                                                                                                                └── unary
+                                                                                                                    └── postfix
+                                                                                                                        └── primary(Interger: 2)
 

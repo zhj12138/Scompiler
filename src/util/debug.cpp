@@ -282,6 +282,7 @@ class ASTPrinter : public DetailedASTVisitor {
     for (auto &exp : expression_list->expression_vec()) {
       ++cur_num;
       is_end_ = (cur_num == total_num);
+      prefix_ = stored_prefix;
       visit(exp);
     }
   }
@@ -361,6 +362,8 @@ class ASTPrinter : public DetailedASTVisitor {
       is_end_ = false;
       prefix_ = stored_prefix;
       visit(equality->left());
+      is_end_ = false;
+      prefix_ = stored_prefix;
       visit < Equality > (equality->op());
     }
     is_end_ = true;
@@ -375,6 +378,8 @@ class ASTPrinter : public DetailedASTVisitor {
       is_end_ = false;
       prefix_ = stored_prefix;
       visit(relational->left());
+      is_end_ = false;
+      prefix_ = stored_prefix;
       visit < Relational > (relational->op());
     }
     is_end_ = true;
@@ -389,6 +394,8 @@ class ASTPrinter : public DetailedASTVisitor {
       is_end_ = false;
       prefix_ = stored_prefix;
       visit(additive->left());
+      is_end_ = false;
+      prefix_ = stored_prefix;
       visit < Additive > (additive->op());
     }
     is_end_ = true;
@@ -403,6 +410,8 @@ class ASTPrinter : public DetailedASTVisitor {
       is_end_ = false;
       prefix_ = stored_prefix;
       visit(multiplicative->left());
+      is_end_ = false;
+      prefix_ = stored_prefix;
       visit < Multiplicative > (multiplicative->op());
     }
     is_end_ = true;
