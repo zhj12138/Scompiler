@@ -7,11 +7,11 @@ main:
 	addi fp, sp, 8
 	li x5, 1
 	mv x1 , x5
-	mv x3 , x1
+	mv x9 , x1
 	li x5, 3
 	mv x1 , x5
-	add x4, x3, x1
-	mv a0, x4
+	add x10, x9, x1
+	mv a0, x10
 	j main_epilogue
 main_epilogue:
 	lw ra, 4(sp)

@@ -9,6 +9,8 @@
 inline const int reg_x0 = 0;  // 始终是0
 inline const int reg_ra = 1;  // 存放返回地址
 inline const int reg_sp = 2;  // 栈地址
+inline const int reg_gp = 3;  // 全局指针
+inline const int reg_tp = 4;  // 线程指针
 inline const int reg_t0 = 5;  // 临时寄存器0
 inline const int reg_t1 = 6;  // 临时寄存器1
 inline const int reg_t2 = 7;  // 临时寄存器2
@@ -52,8 +54,9 @@ class AllocInfo {
  public:
   AllocInfo() {
     for (int i = 0; i < 32; ++i) {
-      if (i == reg_x0 || i == reg_fp || i == reg_sp || i == reg_t0 || i == reg_t1 || i == reg_t2)
-        continue; // 忽略x0, sp和fp
+      if (i == reg_x0 || i == reg_fp || i == reg_sp || i == reg_t0 || i == reg_t1 || i == reg_t2 || i == reg_gp
+          || i == reg_tp)
+        continue; // 忽略x0, sp和fp, t0, t1, t2, gp, tp
       registers_.emplace_back(i);
     }
   }
